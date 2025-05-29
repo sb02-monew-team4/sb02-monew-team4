@@ -20,6 +20,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
@@ -31,39 +32,49 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 public class Notification {
 
-  @CreatedDate
-  @Column(updatable = false, nullable = false)
-  private Instant createdAt;
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id")
   private User user;
+
   @Column(nullable = false, length = 255)
   private String content;
+
   @Column(nullable = false)
   private UUID resourceId;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private ResourceType resourceType;
+
   @Column(nullable = false)
-  private boolean isRead = false;
+  private boolean confirmed = false;
+
+  @CreatedDate
+  @Column(updatable = false, nullable = false)
+  private Instant createdAt;
+
+  @LastModifiedDate
+  @Column(nullable = false)
+  private Instant updatedAt;
 
   public static Notification create(User user, String content, UUID resourceId,
-      ResourceType resourceType, boolean isRead) {
+      ResourceType resourceType, boolean confirmed) {
     return Notification.builder()
         .user(user)
         .content(content)
         .resourceId(resourceId)
         .resourceType(resourceType)
-        .isRead(isRead)
+        .confirmed(confirmed)
         .build();
   }
 
-  public void update(Boolean isRead) {
-    if (isRead != null && !isRead.equals(this.isRead)) {
-      this.isRead = isRead;
+  public void update(Boolean confirmed) {
+    if (confirmed != null && !confirmed.equals(this.confirmed)) {
+      this.confirmed = confirmed;
     }
   }
 }
