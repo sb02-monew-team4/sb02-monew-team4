@@ -1,5 +1,6 @@
 package com.team4.monew.exception;
 
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ public class GlobalExceptionHandler {
     ErrorResponse errorResponse = ErrorResponse.of(
         e.getErrorCode().getStatus().name(),
         e.getMessage(),
+        e.getDetails(),
         e.getClass().getSimpleName(),
         e.getErrorCode().getStatus().value()
     );
@@ -32,6 +34,7 @@ public class GlobalExceptionHandler {
     ErrorResponse errorResponse = ErrorResponse.of(
         "INTERNAL_SERVER_ERROR",
         "An unexpected error occurred",
+        Map.of("error: ", e.getMessage()),
         e.getClass().getSimpleName(),
         HttpStatus.INTERNAL_SERVER_ERROR.value()
     );
