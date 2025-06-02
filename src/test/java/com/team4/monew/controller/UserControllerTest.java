@@ -1,6 +1,9 @@
 package com.team4.monew.controller;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -11,6 +14,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team4.monew.dto.user.UserDto;
 import com.team4.monew.dto.user.UserRegisterRequest;
 import com.team4.monew.dto.user.UserUpdateRequest;
+import com.team4.monew.entity.User;
+import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.service.UserService;
 import java.time.Instant;
 import java.util.UUID;
@@ -48,7 +53,7 @@ public class UserControllerTest {
 
     given(userService.register(request)).willReturn(userDto);
 
-    // when, then
+    // when & then
     mockMvc.perform(post("/api/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
@@ -67,7 +72,7 @@ public class UserControllerTest {
         "test@example.com", "testUser", "passw"
     );
 
-    // when, then
+    // when & then
     mockMvc.perform(post("/api/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(invalidRequest)))
@@ -94,7 +99,7 @@ public class UserControllerTest {
 
     given(userService.update(userId, request)).willReturn(updatedUserDto);
 
-    // when, then
+    // when & then
     mockMvc.perform(patch("/api/users/{userId}", userId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
@@ -112,7 +117,7 @@ public class UserControllerTest {
     UUID userId = UUID.randomUUID();
     UserUpdateRequest invalidRequest = new UserUpdateRequest(" ");
 
-    // when, then
+    // when & then
     mockMvc.perform(patch("/api/users/{userId}", userId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(invalidRequest)))
@@ -120,6 +125,72 @@ public class UserControllerTest {
         .andExpect(jsonPath("$.code").value("BAD_REQUEST"))
         .andExpect(jsonPath("$.message").exists())
         .andExpect(jsonPath("$.details.nickname").value("닉네임은 필수입니다"));
+  }
+
+  @Test
+  @DisplayName("사용자 논리 삭제_성공")
+  void soft_Delete_Success() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+
+    User softDeleted = User.create("test@example.com", "testUser", "password123");
+
+    given(userService.softDelete(userId)).willReturn(softDeleted);
+
+    // when & then
+    mockMvc.perform(delete("/api/users/{userId}", userId)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNoContent());
+  }
+
+  @Test
+  @DisplayName("사용자 논리 삭제_실패_사용자가 존재하지 않는 경우")
+  void soft_Delete_Failure_WhenUserNotFound() throws Exception {
+    // given
+    UUID nonExistentUserId = UUID.randomUUID();
+
+    willThrow(UserNotFoundException.byId(nonExistentUserId))
+        .given(userService).softDelete(nonExistentUserId);
+
+    // when & then
+    mockMvc.perform(delete("/api/users/{userId}", nonExistentUserId)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+        .andExpect(jsonPath("$.message").value("USER_NOT_FOUND"))
+        .andExpect(jsonPath("$.details.userId").value(nonExistentUserId.toString()));
+  }
+
+  @Test
+  @DisplayName("사용자 물리 삭제_성공")
+  void hard_Delete_Success() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+
+    willDoNothing().given(userService).hardDelete(userId);
+
+    // when & then
+    mockMvc.perform(delete("/api/users/{userId}/hard", userId)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNoContent());
+  }
+
+  @Test
+  @DisplayName("사용자 물리 삭제_실패_사용자가 존재하지 않는 경우")
+  void hard_Delete_Failure_WhenUserNotFound() throws Exception {
+    // given
+    UUID nonExistentUserId = UUID.randomUUID();
+
+    willThrow(UserNotFoundException.byId(nonExistentUserId))
+        .given(userService).hardDelete(nonExistentUserId);
+
+    // when & then
+    mockMvc.perform(delete("/api/users/{userId}/hard", nonExistentUserId)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+        .andExpect(jsonPath("$.message").value("USER_NOT_FOUND"))
+        .andExpect(jsonPath("$.details.userId").value(nonExistentUserId.toString()));
   }
 
 

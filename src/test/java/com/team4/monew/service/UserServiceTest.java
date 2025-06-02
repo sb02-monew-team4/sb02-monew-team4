@@ -146,5 +146,67 @@ public class UserServiceTest {
     then(userMapper).should(never()).toDto(any(User.class));
   }
 
+  @Test
+  @DisplayName("사용자 논리 삭제_성공")
+  void soft_Delete_Success() {
+    // given
+    given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+    // when
+    User deletedUser = userService.softDelete(userId);
+
+    // then
+    assertThat(deletedUser.isDeleted()).isTrue();
+
+    then(userRepository).should().findById(userId);
+  }
+
+  @Test
+  @DisplayName("사용자 논리 삭제_실패_사용자가 존재하지 않는 경우")
+  void soft_Delete_Failure_WhenUserNotFound() {
+    // given
+    given(userRepository.findById(userId)).willReturn(Optional.empty());
+
+    // when & then
+    UserNotFoundException exception = assertThrows(UserNotFoundException.class,
+        () -> userService.softDelete(userId));
+
+    assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USER_NOT_FOUND);
+    assertThat(exception.getDetails().get("userId")).isEqualTo(userId);
+
+    then(userRepository).should().findById(userId);
+  }
+
+  @Test
+  @DisplayName("사용자 물리 삭제_성공")
+  void hard_Delete_Success() {
+    // given
+    given(userRepository.existsById(userId)).willReturn(true);
+
+    // when
+    userService.hardDelete(userId);
+
+    // then
+    then(userRepository).should().existsById(userId);
+    then(userRepository).should().deleteById(userId);
+  }
+
+  @Test
+  @DisplayName("사용자 물리 삭제_실패_사용자가 존재하지 않는 경우")
+  void hard_Delete_Failure_WhenUserNotFound() {
+    // given
+    given(userRepository.existsById(userId)).willReturn(false);
+
+    // when & then
+    UserNotFoundException exception = assertThrows(UserNotFoundException.class,
+        () -> userService.hardDelete(userId));
+
+    assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USER_NOT_FOUND);
+    assertThat(exception.getDetails().get("userId")).isEqualTo(userId);
+
+    then(userRepository).should().existsById(userId);
+    then(userRepository).should(never()).deleteById(userId);
+  }
+
 
 }
