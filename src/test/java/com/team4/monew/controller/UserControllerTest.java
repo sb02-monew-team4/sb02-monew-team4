@@ -1,6 +1,7 @@
 package com.team4.monew.controller;
 
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -9,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team4.monew.dto.user.UserDto;
 import com.team4.monew.dto.user.UserRegisterRequest;
+import com.team4.monew.dto.user.UserUpdateRequest;
 import com.team4.monew.service.UserService;
 import java.time.Instant;
 import java.util.UUID;
@@ -73,6 +75,51 @@ public class UserControllerTest {
         .andExpect(jsonPath("$.code").value("BAD_REQUEST"))
         .andExpect(jsonPath("$.message").exists())
         .andExpect(jsonPath("$.details.password").value("비밀번호는 6자 이상 20자 이하여야 합니다"));
+  }
+
+  @Test
+  @DisplayName("사용자 정보 수정_성공")
+  void update_Success_ShouldReturnUpdatedUser() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+
+    UserUpdateRequest request = new UserUpdateRequest("newTestUser");
+
+    UserDto updatedUserDto = new UserDto(
+        userId,
+        "test@example.com",
+        "newTestUser",
+        Instant.now()
+    );
+
+    given(userService.update(userId, request)).willReturn(updatedUserDto);
+
+    // when, then
+    mockMvc.perform(patch("/api/users/{userId}", userId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.id").value(updatedUserDto.id().toString()))
+        .andExpect(jsonPath("$.email").value("test@example.com"))
+        .andExpect(jsonPath("$.nickname").value("newTestUser"));
+  }
+
+  @Test
+  @DisplayName("사용자 정보 수정_실패_닉네임이 빈 값인 경우")
+  void update_Success_WhenNicknameBlank() throws Exception {
+    // given
+    UUID userId = UUID.randomUUID();
+    UserUpdateRequest invalidRequest = new UserUpdateRequest(" ");
+
+    // when, then
+    mockMvc.perform(patch("/api/users/{userId}", userId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(invalidRequest)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("BAD_REQUEST"))
+        .andExpect(jsonPath("$.message").exists())
+        .andExpect(jsonPath("$.details.nickname").value("닉네임은 필수입니다"));
   }
 
 

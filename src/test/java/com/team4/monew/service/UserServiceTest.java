@@ -9,13 +9,16 @@ import static org.mockito.Mockito.never;
 
 import com.team4.monew.dto.user.UserDto;
 import com.team4.monew.dto.user.UserRegisterRequest;
+import com.team4.monew.dto.user.UserUpdateRequest;
 import com.team4.monew.entity.User;
 import com.team4.monew.exception.ErrorCode;
 import com.team4.monew.exception.user.UserAlreadyExistException;
+import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.mapper.UserMapper;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicUserService;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,6 +57,7 @@ public class UserServiceTest {
 
     user = User.create(email, nickname, password);
     ReflectionTestUtils.setField(user, "id", userId);
+    ReflectionTestUtils.setField(user, "createdAt", Instant.now());
     userDto = new UserDto(userId, email, nickname, Instant.now());
   }
 
@@ -94,6 +98,52 @@ public class UserServiceTest {
 
     then(userRepository).should().existsByEmail(request.email());
     then(userRepository).should(never()).save(any(User.class));
+  }
+
+  @Test
+  @DisplayName("사용자 정보 수정_성공")
+  void update_Success_ShouldReturnUpdatedUser() {
+    // given
+    UserUpdateRequest request = new UserUpdateRequest("newNickname");
+
+    given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+    UserDto updatedUserDto = new UserDto(
+        user.getId(),
+        user.getEmail(),
+        request.nickname(),
+        user.getCreatedAt()
+    );
+
+    given(userMapper.toDto(user)).willReturn(updatedUserDto);
+
+    // when
+    UserDto result = userService.update(userId, request);
+
+    // then
+    assertThat(result.nickname()).isEqualTo(request.nickname());
+
+    then(userRepository).should().findById(userId);
+    then(userMapper).should().toDto(user);
+  }
+
+  @Test
+  @DisplayName("사용자 정보 수정_실패_사용자가 존재하지 않는 경우")
+  void update_Failure_WhenUserNotFound() {
+    // given
+    UserUpdateRequest request = new UserUpdateRequest("newNickname");
+
+    given(userRepository.findById(userId)).willReturn(Optional.empty());
+
+    // when & then
+    UserNotFoundException exception = assertThrows(UserNotFoundException.class,
+        () -> userService.update(userId, request));
+
+    assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USER_NOT_FOUND);
+    assertThat(exception.getDetails().get("userId")).isEqualTo(userId);
+
+    then(userRepository).should().findById(userId);
+    then(userMapper).should(never()).toDto(any(User.class));
   }
 
 
