@@ -9,6 +9,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,6 +41,22 @@ public class UserController {
   ) {
     UserDto updatedUser = userService.update(userId, request);
     return ResponseEntity.ok(updatedUser);
+  }
+
+  @DeleteMapping("/{userId}")
+  public ResponseEntity<Void> softDelete(
+      @PathVariable("userId") UUID userId
+  ) {
+    userService.softDelete(userId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @DeleteMapping("/{userId}/hard")
+  public ResponseEntity<Void> hardDelete(
+      @PathVariable("userId") UUID userId
+  ) {
+    userService.hardDelete(userId);
+    return ResponseEntity.noContent().build();
   }
 
 

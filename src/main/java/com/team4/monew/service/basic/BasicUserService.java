@@ -49,11 +49,21 @@ public class BasicUserService implements UserService {
 
   @Override
   public User softDelete(UUID userId) {
-    return null;
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> UserNotFoundException.byId(userId));
+
+    user.updateIsDeleted();
+
+    return user;
   }
 
   @Override
   public void hardDelete(UUID userId) {
-
+    if (!userRepository.existsById(userId)) {
+      throw UserNotFoundException.byId(userId);
+    }
+    userRepository.deleteById(userId);
   }
+
+
 }
