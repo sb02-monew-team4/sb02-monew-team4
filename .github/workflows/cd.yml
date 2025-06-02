@@ -79,7 +79,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-def.json
-          container-name: container-name
+          container-name: monew-app
           image: ${{ env.ECR_REPOSITORY_URI }}:${{ env.IMAGE_TAG }}
 
       - name: Scale down ECS service to 0 (stop current tasks)
