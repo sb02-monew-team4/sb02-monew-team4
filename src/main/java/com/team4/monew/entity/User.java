@@ -74,5 +74,11 @@ public class User {
     }
   }
 
+  public void updateIsDeleted() {
+    if(!isDeleted) {
+      this.isDeleted = true;
+    }
+  }
+
 
 }
