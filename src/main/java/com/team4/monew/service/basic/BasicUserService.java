@@ -5,6 +5,7 @@ import com.team4.monew.dto.user.UserRegisterRequest;
 import com.team4.monew.dto.user.UserUpdateRequest;
 import com.team4.monew.entity.User;
 import com.team4.monew.exception.user.UserAlreadyExistException;
+import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.mapper.UserMapper;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.UserService;
@@ -38,7 +39,12 @@ public class BasicUserService implements UserService {
 
   @Override
   public UserDto update(UUID userId, UserUpdateRequest updateRequest) {
-    return null;
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> UserNotFoundException.byId(userId));
+
+    user.update(updateRequest.nickname());
+
+    return userMapper.toDto(user);
   }
 
   @Override

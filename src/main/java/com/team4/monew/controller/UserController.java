@@ -2,11 +2,15 @@ package com.team4.monew.controller;
 
 import com.team4.monew.dto.user.UserDto;
 import com.team4.monew.dto.user.UserRegisterRequest;
+import com.team4.monew.dto.user.UserUpdateRequest;
 import com.team4.monew.service.UserService;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +31,15 @@ public class UserController {
     return ResponseEntity
         .status(HttpStatus.CREATED)
         .body(registeredUser);
+  }
+
+  @PatchMapping("/{userId}")
+  public ResponseEntity<UserDto> update(
+      @PathVariable("userId") UUID userId,
+      @RequestBody @Valid UserUpdateRequest request
+  ) {
+    UserDto updatedUser = userService.update(userId, request);
+    return ResponseEntity.ok(updatedUser);
   }
 
 
