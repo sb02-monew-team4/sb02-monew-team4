@@ -13,7 +13,4 @@ public class UserAlreadyExistException extends UserException {
     return new UserAlreadyExistException(ErrorCode.DUPLICATE_USER, Map.of("email", email));
   }
 
-  public static UserAlreadyExistException byUsername(String username) {
-    return new UserAlreadyExistException(ErrorCode.DUPLICATE_USER, Map.of("username", username));
-  }
 }
