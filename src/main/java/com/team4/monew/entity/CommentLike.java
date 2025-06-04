@@ -28,7 +28,7 @@ public class CommentLike {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID Id;
+  private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "comment_id", nullable = false)
