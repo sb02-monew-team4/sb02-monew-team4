@@ -15,6 +15,7 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -22,6 +23,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(name = "comments")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
@@ -33,7 +35,7 @@ public class Comment {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "news_id", nullable = false)
-  private News news;
+  private Article news;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
@@ -44,11 +46,11 @@ public class Comment {
 
   @CreatedDate
   @Column(name = "created_at", updatable = false, nullable = false)
-  private Instant createAt;
+  private Instant createdAt;
 
   @LastModifiedDate
   @Column(name = "updated_at", nullable = false)
-  private Instant updateAt;
+  private Instant updatedAt;
 
   @Column(name = "is_deleted")
   private Boolean isDeleted = false;
@@ -56,4 +58,20 @@ public class Comment {
   @Column(name = "like_count")
   private Long likeCount = 0L;
 
+  public Comment(User user, Article news, String content) {
+    this.user = user;
+    this.news = news;
+    this.content = content;
+  }
+
+  public void updateContent(String content) {
+    if (this.isDeleted) {
+      throw new IllegalStateException("삭제된 댓글은 수정할 수 없습니다.");
+    }
+    this.content = content;
+  }
+
+  public void markDeleted() {
+    this.isDeleted = true;
+  }
 }
