@@ -12,7 +12,7 @@ import com.team4.monew.dto.article.ArticleViewDto;
 import com.team4.monew.entity.Article;
 import com.team4.monew.entity.ArticleView;
 import com.team4.monew.entity.User;
-import com.team4.monew.exception.news.NewsNotFoundException;
+import com.team4.monew.exception.article.ArticleNotFoundException;
 import com.team4.monew.mapper.ArticleViewMapper;
 import com.team4.monew.repository.ArticleRepository;
 import com.team4.monew.repository.ArticleViewRepository;
@@ -92,7 +92,7 @@ public class ArticleServiceTest {
 
     when(articleRepository.findById(newsId)).thenReturn(Optional.empty());
 
-    assertThrows(NewsNotFoundException.class, () ->
+    assertThrows(ArticleNotFoundException.class, () ->
         basicNewsService.registerNewsView(newsId, userId)
     );
     verify(articleRepository).findById(newsId);
