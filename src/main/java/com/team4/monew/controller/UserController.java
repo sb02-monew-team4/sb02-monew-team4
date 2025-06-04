@@ -58,6 +58,4 @@ public class UserController {
     userService.hardDelete(userId);
     return ResponseEntity.noContent().build();
   }
-
-
 }
