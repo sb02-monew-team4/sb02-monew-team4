@@ -20,15 +20,15 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class NewsView {
+public class ArticleView {
 
   @EmbeddedId
-  private NewsViewId id;
+  private ArticleViewId id;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "news_id", referencedColumnName = "id",
       insertable = false, updatable = false)
-  private News news;
+  private Article news;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", referencedColumnName = "id",
@@ -40,8 +40,8 @@ public class NewsView {
   @Column(name = "viewed_at", nullable = false)
   private Instant viewedAt;
 
-  public NewsView(News news, User user) {
-    this.id = new NewsViewId(news.getId(), user.getId());
+  public ArticleView(Article news, User user) {
+    this.id = new ArticleViewId(news.getId(), user.getId());
     this.news = news;
     this.user = user;
   }

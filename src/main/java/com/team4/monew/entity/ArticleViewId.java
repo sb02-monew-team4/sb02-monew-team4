@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Embeddable
 @Getter
-public class NewsViewId implements Serializable {
+public class ArticleViewId implements Serializable {
 
   private UUID newsId;
   private UUID userId;
@@ -25,7 +25,7 @@ public class NewsViewId implements Serializable {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    NewsViewId that = (NewsViewId) o;
+    ArticleViewId that = (ArticleViewId) o;
     return newsId.equals(that.newsId) && userId.equals(that.userId);
   }
 

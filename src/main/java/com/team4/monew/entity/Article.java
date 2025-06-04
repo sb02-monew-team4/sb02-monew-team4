@@ -26,7 +26,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class News {
+public class Article {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

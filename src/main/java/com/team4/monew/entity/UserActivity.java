@@ -27,7 +27,7 @@ public class UserActivity {
   private List<Interest> subInterests;
   private List<Comment> recentComments;
   private List<CommentLike> likedComments;
-  private List<News> recentNews;
+  private List<Article> recentNews;
 
   private Instant lastUpdated;
 }
