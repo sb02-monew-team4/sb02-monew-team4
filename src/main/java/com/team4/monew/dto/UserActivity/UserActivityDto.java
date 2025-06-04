@@ -1,5 +1,7 @@
 package com.team4.monew.dto.UserActivity;
 
+import com.team4.monew.dto.interest.SubscriptionDto;
+import com.team4.monew.dto.article.ArticleViewDto;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
