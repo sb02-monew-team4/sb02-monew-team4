@@ -1,14 +1,18 @@
 package com.team4.monew.entity;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -16,23 +20,25 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "news_views")
+@Table(name = "article_views",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uq_article_user",
+        columnNames = {"article_id", "user_id"}))
 @Getter
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class NewsView {
+public class ArticleView {
 
-  @EmbeddedId
-  private NewsViewId id;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "news_id", referencedColumnName = "id",
-      insertable = false, updatable = false)
-  private News news;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", referencedColumnName = "id",
-      insertable = false, updatable = false)
+  @JoinColumn(name = "article_id", referencedColumnName = "id", nullable = false)
+  private Article article;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
   private User user;
 
   @CreatedDate
@@ -40,9 +46,8 @@ public class NewsView {
   @Column(name = "viewed_at", nullable = false)
   private Instant viewedAt;
 
-  public NewsView(News news, User user) {
-    this.id = new NewsViewId(news.getId(), user.getId());
-    this.news = news;
+  public ArticleView(Article article, User user) {
+    this.article = article;
     this.user = user;
   }
 }
