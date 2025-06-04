@@ -4,7 +4,7 @@ import com.team4.monew.dto.article.ArticleViewDto;
 import com.team4.monew.entity.Article;
 import com.team4.monew.entity.ArticleView;
 import com.team4.monew.entity.User;
-import com.team4.monew.exception.news.NewsNotFoundException;
+import com.team4.monew.exception.article.ArticleNotFoundException;
 import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.mapper.ArticleViewMapper;
 import com.team4.monew.repository.ArticleRepository;
@@ -29,7 +29,7 @@ public class BasicArticleService implements ArticleService {
   @Override
   public ArticleViewDto registerNewsView(UUID newsId, UUID userId) {
     Article article = articleRepository.findById(newsId)
-        .orElseThrow(() -> NewsNotFoundException.byId(newsId));
+        .orElseThrow(() -> ArticleNotFoundException.byId(newsId));
 
     User user = userRepository.findById(userId)
         .orElseThrow(() -> UserNotFoundException.byId(userId));
