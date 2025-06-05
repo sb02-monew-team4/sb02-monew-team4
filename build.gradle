@@ -53,6 +53,9 @@ dependencies {
     // QueryDSL
     implementation 'com.querydsl:querydsl-jpa'
     annotationProcessor "com.querydsl:querydsl-apt"
+
+    // RSS 피드 읽기 위한 rome 라이브러리
+    implementation 'com.rometools:rome:2.1.0'
 }
 
 tasks.named('test') {
