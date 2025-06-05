@@ -60,18 +60,23 @@ public class User {
   )
   private List<Interest> interests = new ArrayList<>();
 
-  public static User create(String email, String nickname, String password, boolean isDeleted) {
+  public static User create(String email, String nickname, String password) {
     return User.builder()
         .email(email)
         .nickname(nickname)
         .password(password)
-        .isDeleted(isDeleted)
         .build();
   }
 
   public void update(String nickname) {
     if (nickname != null && !nickname.equals(this.nickname)) {
       this.nickname = nickname;
+    }
+  }
+
+  public void updateIsDeleted() {
+    if(!isDeleted) {
+      this.isDeleted = true;
     }
   }
 
