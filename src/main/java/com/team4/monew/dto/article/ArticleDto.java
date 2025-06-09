@@ -1,4 +1,4 @@
-package com.team4.monew.dto.news;
+package com.team4.monew.dto.article;
 
 import java.time.Instant;
 import java.util.UUID;
