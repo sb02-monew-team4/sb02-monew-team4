@@ -1,5 +1,6 @@
 package com.team4.monew.controller;
 
+import com.team4.monew.auth.OwnerCheck;
 import com.team4.monew.dto.user.UserDto;
 import com.team4.monew.dto.user.UserRegisterRequest;
 import com.team4.monew.dto.user.UserUpdateRequest;
@@ -34,6 +35,7 @@ public class UserController {
         .body(registeredUser);
   }
 
+  @OwnerCheck
   @PatchMapping("/{userId}")
   public ResponseEntity<UserDto> update(
       @PathVariable("userId") UUID userId,
@@ -43,6 +45,7 @@ public class UserController {
     return ResponseEntity.ok(updatedUser);
   }
 
+  @OwnerCheck
   @DeleteMapping("/{userId}")
   public ResponseEntity<Void> softDelete(
       @PathVariable("userId") UUID userId
@@ -51,6 +54,7 @@ public class UserController {
     return ResponseEntity.noContent().build();
   }
 
+  @OwnerCheck
   @DeleteMapping("/{userId}/hard")
   public ResponseEntity<Void> hardDelete(
       @PathVariable("userId") UUID userId

@@ -6,6 +6,10 @@ import java.util.Map;
 
 public abstract class UserException extends MonewException {
 
+  protected UserException(ErrorCode errorCode) {
+    super(errorCode);
+  }
+
   protected UserException(ErrorCode errorCode, Map<String, Object> details) {
     super(errorCode, details);
   }
