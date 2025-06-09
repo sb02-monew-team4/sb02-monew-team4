@@ -13,7 +13,7 @@ public enum ErrorCode {
   UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "본인만 접근할 수 있습니다."),
 
   // NOTIFICATION
-  //NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다."),
+  NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다."),
   
   // USER_ACTIVITY
   USER_ACTIVITY_NOT_FOUND(HttpStatus.NOT_FOUND, "유저 활동 내역이 없습니다"),
