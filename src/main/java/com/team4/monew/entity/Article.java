@@ -21,7 +21,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "news")
+@Table(name = "article")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -42,7 +42,7 @@ public class Article {
   private String title;
 
   @Column(nullable = false)
-  private Instant date;
+  private Instant publishedDate;
 
   @Column(length = 150, nullable = false)
   private String summary;
@@ -59,9 +59,18 @@ public class Article {
 
   @ManyToMany
   @JoinTable(
-      name = "news_interests",
-      joinColumns = @JoinColumn(name = "news_id"),
+      name = "article_interests",
+      joinColumns = @JoinColumn(name = "article_id"),
       inverseJoinColumns = @JoinColumn(name = "interest_id")
   )
   private Set<Interest> interest = new HashSet<>();
+
+  public Article(String source, String originalLink, String title, Instant publishedDate,
+      String summary) {
+    this.source = source;
+    this.originalLink = originalLink;
+    this.title = title;
+    this.publishedDate = publishedDate;
+    this.summary = summary;
+  }
 }

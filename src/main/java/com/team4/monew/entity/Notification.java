@@ -72,9 +72,9 @@ public class Notification {
         .build();
   }
 
-  public void update(Boolean confirmed) {
-    if (confirmed != null && !confirmed.equals(this.confirmed)) {
-      this.confirmed = confirmed;
+  public void updateConfirmed() {
+    if(!confirmed) {
+      this.confirmed = true;
     }
   }
 }
