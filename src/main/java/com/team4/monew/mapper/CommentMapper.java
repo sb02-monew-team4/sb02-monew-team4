@@ -10,7 +10,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface CommentMapper {
 
-  @Mapping(target = "articleId", source = "news.id")
+  @Mapping(target = "articleId", source = "article.id")
   @Mapping(target = "userId", source = "user.id")
   @Mapping(target = "userNickname", source = "user.nickname")
   @Mapping(target = "likeCount", expression = "java(comment.getLikeCount() != null ? comment.getLikeCount().intValue() : 0)")

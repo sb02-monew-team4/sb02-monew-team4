@@ -23,7 +23,7 @@ public record CommentLikeDto(
         like.getUser().getId(),
         like.getCreatedAt(),
         comment.getId(),
-        comment.getNews().getId(),
+        comment.getArticle().getId(),
         comment.getUser().getId(),
         comment.getUser().getNickname(),
         comment.getContent(),

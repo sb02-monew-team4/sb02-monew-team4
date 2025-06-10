@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface CommentRepository extends JpaRepository<Comment, UUID>, CommentRepositoryCustom {
   Page<Comment> findByUserIdAndIsDeletedFalse(UUID userId, Pageable pageable);
   List<Comment> findCommentsByArticleWithCursorPaging(
-      UUID newsId,
+      UUID articleId,
       String orderBy,
       String direction,
       String cursor,
@@ -18,5 +18,5 @@ public interface CommentRepository extends JpaRepository<Comment, UUID>, Comment
       int limit
   );
 
-  long countByNewsId(UUID newsId);
+  long countByArticleId(UUID articleId);
 }

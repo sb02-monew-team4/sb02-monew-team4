@@ -51,7 +51,7 @@ public class CommentServiceTest {
   private UserRepository userRepository;
 
   @Mock
-  private ArticleRepository newsRepository;
+  private ArticleRepository articleRepository;
 
   @Mock
   private CommentMapper commentMapper;
@@ -60,22 +60,22 @@ public class CommentServiceTest {
   private BasicCommentService basicCommentService;
 
   private UUID userId;
-  private UUID newsId;
+  private UUID articleId;
   private User user;
-  private Article news;
+  private Article article;
   private Comment comment;
 
   @BeforeEach
   void setUp() {
     userId = UUID.randomUUID();
-    newsId = UUID.randomUUID();
+    articleId = UUID.randomUUID();
 
     user = User.create("test@test.com", "test", "123");
     ReflectionTestUtils.setField(user, "id", userId);
     ReflectionTestUtils.setField(user, "createdAt", Instant.now());
 
-    news = new Article(
-        newsId,
+    article = new Article(
+        articleId,
         "출처",
         "http://original.link",
         "뉴스 제목",
@@ -92,13 +92,13 @@ public class CommentServiceTest {
   @DisplayName("댓글 등록 성공")
   void registerComment() {
     String content = "댓글 내용";
-    CommentRegisterRequest request = new CommentRegisterRequest(newsId, userId, content);
+    CommentRegisterRequest request = new CommentRegisterRequest(articleId, userId, content);
 
-    comment = new Comment(user, news, content);
+    comment = new Comment(user, article, content);
     ReflectionTestUtils.setField(comment, "id", UUID.randomUUID());
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(newsRepository.findById(newsId)).thenReturn(Optional.of(news));
+    when(articleRepository.findById(articleId)).thenReturn(Optional.of(article));
     when(commentRepository.save(any(Comment.class))).thenReturn(comment);
 
     CommentDto result = basicCommentService.register(request);
@@ -106,13 +106,13 @@ public class CommentServiceTest {
     assertNotNull(result);
     assertEquals(content, result.content());
     assertEquals(userId, result.userId());
-    assertEquals(newsId, result.articleId());
+    assertEquals(articleId, result.articleId());
   }
 
   @Test
   @DisplayName("댓글 등록 실패 - 사용자 없음")
   void registerComment_fail_userNotFound() {
-    CommentRegisterRequest request = new CommentRegisterRequest(newsId, userId, "댓글 내용");
+    CommentRegisterRequest request = new CommentRegisterRequest(articleId, userId, "댓글 내용");
 
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
@@ -125,12 +125,12 @@ public class CommentServiceTest {
 
   @Test
   @DisplayName("댓글 등록 실패 - 뉴스 없음")
-  void registerComment_fail_newsNotFound() {
+  void registerComment_fail_articleNotFound() {
     String content = "댓글 내용";
-    CommentRegisterRequest request = new CommentRegisterRequest(newsId, userId, content);
+    CommentRegisterRequest request = new CommentRegisterRequest(articleId, userId, content);
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(newsRepository.findById(newsId)).thenReturn(Optional.empty());
+    when(articleRepository.findById(articleId)).thenReturn(Optional.empty());
 
     assertThrows(IllegalArgumentException.class, () -> {
       basicCommentService.register(request);
@@ -152,18 +152,18 @@ public class CommentServiceTest {
     when(mockUser.getId()).thenReturn(UUID.randomUUID());
     when(mockUser.getNickname()).thenReturn("nickname");
 
-    Article mockNews = mock(Article.class);
+    Article mockArticle = mock(Article.class);
 
-    Comment comment1 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockNews, "댓글1", Instant.parse("2025-05-01T10:00:00Z"));
-    Comment comment2 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockNews, "댓글2", Instant.parse("2025-05-01T10:05:00Z"));
-    Comment comment3 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockNews, "댓글3", Instant.parse("2025-05-01T10:10:00Z"));
+    Comment comment1 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockArticle, "댓글1", Instant.parse("2025-05-01T10:00:00Z"));
+    Comment comment2 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockArticle, "댓글2", Instant.parse("2025-05-01T10:05:00Z"));
+    Comment comment3 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockArticle, "댓글3", Instant.parse("2025-05-01T10:10:00Z"));
 
     List<Comment> mockComments = List.of(comment1, comment2, comment3);
 
     when(commentRepository.findCommentsByArticleWithCursorPaging(articleId, orderBy, direction, cursor, after, limit))
         .thenReturn(mockComments);
 
-    when(commentRepository.countByNewsId(articleId)).thenReturn(10L);
+    when(commentRepository.countByArticleId(articleId)).thenReturn(10L);
 
     when(commentMapper.toDto(any(Comment.class), any(UUID.class)))
         .thenAnswer(invocation -> {
@@ -206,20 +206,20 @@ public class CommentServiceTest {
     when(mockUser.getId()).thenReturn(UUID.randomUUID());
     when(mockUser.getNickname()).thenReturn("user1");
 
-    Article mockNews = mock(Article.class);
+    Article mockArticle = mock(Article.class);
     UUID articleId = UUID.randomUUID();
-    when(mockNews.getId()).thenReturn(articleId);
+    when(mockArticle.getId()).thenReturn(articleId);
 
-    Comment comment1 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockNews, "좋아요 많은 댓글", 10L, Instant.parse("2025-05-01T10:00:00Z"));
-    Comment comment2 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockNews, "중간 댓글", 5L, Instant.parse("2025-05-01T10:05:00Z"));
-    Comment comment3 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockNews, "좋아요 적은 댓글", 1L, Instant.parse("2025-05-01T10:10:00Z"));
+    Comment comment1 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle, "좋아요 많은 댓글", 10L, Instant.parse("2025-05-01T10:00:00Z"));
+    Comment comment2 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle, "중간 댓글", 5L, Instant.parse("2025-05-01T10:05:00Z"));
+    Comment comment3 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle, "좋아요 적은 댓글", 1L, Instant.parse("2025-05-01T10:10:00Z"));
 
     List<Comment> mockComments = List.of(comment1, comment2, comment3);
 
     when(commentRepository.findCommentsByArticleWithCursorPaging(eq(articleId), eq(orderBy), eq(direction), eq(cursor), eq(after), eq(limit)))
         .thenReturn(mockComments);
 
-    when(commentRepository.countByNewsId(articleId)).thenReturn(20L);
+    when(commentRepository.countByArticleId(articleId)).thenReturn(20L);
 
     when(commentMapper.toDto(any(Comment.class), eq(requesterId)))
         .thenAnswer(invocation -> {
@@ -260,7 +260,7 @@ public class CommentServiceTest {
         eq(articleId), eq(orderBy), eq(direction), eq(cursor), eq(after), eq(limit)))
         .thenReturn(List.of());
 
-    when(commentRepository.countByNewsId(articleId)).thenReturn(0L);
+    when(commentRepository.countByArticleId(articleId)).thenReturn(0L);
 
     CursorPageResponseCommentDto actualResponse =
         basicCommentService.getCommentsByArticleWithCursor(articleId, orderBy, direction, cursor, after, limit, requesterId);
@@ -287,7 +287,7 @@ public class CommentServiceTest {
     ReflectionTestUtils.setField(comment, "id", commentId);
     ReflectionTestUtils.setField(comment, "likeCount", 0L);
     ReflectionTestUtils.setField(comment, "user", user);
-    ReflectionTestUtils.setField(comment, "news", new Article());
+    ReflectionTestUtils.setField(comment, "article", new Article());
 
     when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -359,10 +359,10 @@ public class CommentServiceTest {
     User user = User.create("test@example.com", "tester", "password123");
     ReflectionTestUtils.setField(user, "id", userId);
 
-    Article news = new Article();
-    ReflectionTestUtils.setField(news, "id", UUID.randomUUID());
+    Article article = new Article();
+    ReflectionTestUtils.setField(article, "id", UUID.randomUUID());
 
-    Comment comment = new Comment(user, news, "댓글 내용");
+    Comment comment = new Comment(user, article, "댓글 내용");
     ReflectionTestUtils.setField(comment, "id", commentId);
     ReflectionTestUtils.setField(comment, "likeCount", 1L);
 
@@ -388,10 +388,10 @@ public class CommentServiceTest {
     User user = User.create("test@example.com", "tester", "password123");
     ReflectionTestUtils.setField(user, "id", userId);
 
-    Article news = new Article();
-    ReflectionTestUtils.setField(news, "id", UUID.randomUUID());
+    Article article = new Article();
+    ReflectionTestUtils.setField(article, "id", UUID.randomUUID());
 
-    Comment comment = new Comment(user, news, "댓글 내용");
+    Comment comment = new Comment(user, article, "댓글 내용");
     ReflectionTestUtils.setField(comment, "id", commentId);
 
     when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
@@ -411,7 +411,7 @@ public class CommentServiceTest {
     String updatedContent = "수정된 댓글 내용";
     CommentUpdateRequest request = new CommentUpdateRequest(updatedContent);
 
-    comment = new Comment(user, news, "기존 댓글 내용");
+    comment = new Comment(user, article, "기존 댓글 내용");
     ReflectionTestUtils.setField(comment, "id", commentId);
 
     when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
@@ -448,7 +448,7 @@ public class CommentServiceTest {
 
     UUID otherUserId = UUID.randomUUID();
 
-    comment = new Comment(user, news, "기존 댓글 내용");
+    comment = new Comment(user, article, "기존 댓글 내용");
     ReflectionTestUtils.setField(comment, "id", commentId);
 
     when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
@@ -465,7 +465,7 @@ public class CommentServiceTest {
   void deleteComment_success() {
     UUID commentId = UUID.randomUUID();
 
-    comment = new Comment(user, news, "삭제할 댓글");
+    comment = new Comment(user, article, "삭제할 댓글");
     ReflectionTestUtils.setField(comment, "id", commentId);
     ReflectionTestUtils.setField(comment, "isDeleted", false);
 
@@ -500,10 +500,10 @@ public class CommentServiceTest {
     UUID authorId = UUID.randomUUID();
     ReflectionTestUtils.setField(author, "id", authorId);
 
-    Article news = new Article();
-    ReflectionTestUtils.setField(news, "id", UUID.randomUUID());
+    Article article = new Article();
+    ReflectionTestUtils.setField(article, "id", UUID.randomUUID());
 
-    Comment comment = new Comment(author, news, "삭제할 댓글");
+    Comment comment = new Comment(author, article, "삭제할 댓글");
     ReflectionTestUtils.setField(comment, "id", commentId);
 
     UUID otherUserId = UUID.randomUUID();

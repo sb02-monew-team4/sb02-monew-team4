@@ -17,7 +17,7 @@ public record CommentDto(
   public static CommentDto from(Comment comment) {
     return new CommentDto(
         comment.getId(),
-        comment.getNews().getId(),
+        comment.getArticle().getId(),
         comment.getUser().getId(),
         comment.getUser().getNickname(),
         comment.getContent(),

@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BasicCommentService implements CommentService {
 
   private final UserRepository userRepository;
-  private final ArticleRepository newsRepository;
+  private final ArticleRepository articleRepository;
   private final CommentRepository commentRepository;
   private final CommentLikeRepository commentLikeRepository;
   private final CommentMapper commentMapper;
@@ -44,10 +44,10 @@ public class BasicCommentService implements CommentService {
     User user = userRepository.findById(request.userId())
         .orElseThrow(() -> new MonewException(ErrorCode.USER_NOT_FOUND));
 
-    Article news = newsRepository.findById(request.articleId())
+    Article article = articleRepository.findById(request.articleId())
         .orElseThrow(() -> new MonewException(ErrorCode.NEWS_NOT_FOUND));
 
-    Comment comment = new Comment(user, news, request.content());
+    Comment comment = new Comment(user, article, request.content());
     Comment saved = commentRepository.save(comment);
 
     return CommentDto.from(saved);
@@ -79,7 +79,7 @@ public class BasicCommentService implements CommentService {
       nextAfter = last.getCreatedAt().toString();
     }
 
-    Long total = commentRepository.countByNewsId(articleId);
+    Long total = commentRepository.countByArticleId(articleId);
     boolean hasNext = comments.size() == limit;
 
     return new CursorPageResponseCommentDto(

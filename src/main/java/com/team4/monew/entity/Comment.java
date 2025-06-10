@@ -32,8 +32,8 @@ public class Comment {
   private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "news_id", nullable = false)
-  private Article news;
+  @JoinColumn(name = "article_id", nullable = false)
+  private Article article;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
@@ -56,27 +56,27 @@ public class Comment {
   @Column(name = "like_count")
   private Long likeCount = 0L;
 
-  public Comment(User user, Article news, String content) {
+  public Comment(User user, Article article, String content) {
     this.user = user;
-    this.news = news;
+    this.article = article;
     this.content = content;
   }
 
-  private Comment(UUID id, User user, Article news, String content, Long likeCount, Instant createdAt) {
+  private Comment(UUID id, User user, Article article, String content, Long likeCount, Instant createdAt) {
     this.id = id;
     this.user = user;
-    this.news = news;
+    this.article = article;
     this.content = content;
     this.likeCount = likeCount != null ? likeCount : 0L;
     this.createdAt = createdAt;
   }
 
-  public static Comment createWithLikeCount(UUID id, User user, Article news, String content, Long likeCount, Instant createdAt) {
-    return new Comment(id, user, news, content, likeCount, createdAt);
+  public static Comment createWithLikeCount(UUID id, User user, Article article, String content, Long likeCount, Instant createdAt) {
+    return new Comment(id, user, article, content, likeCount, createdAt);
   }
 
-  public static Comment createWithCreatedAt(UUID id, User user, Article news, String content, Instant createdAt) {
-    return new Comment(id, user, news, content, 0L, createdAt);
+  public static Comment createWithCreatedAt(UUID id, User user, Article article, String content, Instant createdAt) {
+    return new Comment(id, user, article, content, 0L, createdAt);
   }
 
   public void updateContent(String content) {

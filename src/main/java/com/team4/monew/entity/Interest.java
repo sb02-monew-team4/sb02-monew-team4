@@ -53,5 +53,5 @@ public class Interest {
   private List<InterestKeyword> keywords = new ArrayList<>();
 
   @ManyToMany(mappedBy = "interest")
-  private Set<Article> news = new HashSet<>();
+  private Set<Article> article = new HashSet<>();
 }
