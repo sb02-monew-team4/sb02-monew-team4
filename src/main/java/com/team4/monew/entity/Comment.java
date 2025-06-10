@@ -15,7 +15,6 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -23,7 +22,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(name = "comments")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
@@ -64,6 +62,23 @@ public class Comment {
     this.content = content;
   }
 
+  private Comment(UUID id, User user, Article news, String content, Long likeCount, Instant createdAt) {
+    this.id = id;
+    this.user = user;
+    this.news = news;
+    this.content = content;
+    this.likeCount = likeCount != null ? likeCount : 0L;
+    this.createdAt = createdAt;
+  }
+
+  public static Comment createWithLikeCount(UUID id, User user, Article news, String content, Long likeCount, Instant createdAt) {
+    return new Comment(id, user, news, content, likeCount, createdAt);
+  }
+
+  public static Comment createWithCreatedAt(UUID id, User user, Article news, String content, Instant createdAt) {
+    return new Comment(id, user, news, content, 0L, createdAt);
+  }
+
   public void updateContent(String content) {
     if (this.isDeleted) {
       throw new IllegalStateException("삭제된 댓글은 수정할 수 없습니다.");
@@ -73,5 +88,15 @@ public class Comment {
 
   public void markDeleted() {
     this.isDeleted = true;
+  }
+
+  public void increaseLikeCount() {
+    this.likeCount++;
+  }
+
+  public void decreaseLikeCount() {
+    if (this.likeCount > 0) {
+      this.likeCount--;
+    }
   }
 }
