@@ -75,6 +75,12 @@ public class BasicUserActivityService implements UserActivityService {
     UserActivity userActivity = getUserActivityOrThrow(userId);
     userActivity.getRecentCommentActivityDtos().remove(dto);
     userActivityRepository.save(userActivity);
+  }
+
+  @Transactional
+  @Override
+  public void updateRecentComment(UUID userId, Comment comment) {
+    CommentActivityDto dto = commentActivityMapper.toDto(comment);
 
     UserActivity userActivity = getUserActivityOrThrow(userId);
     List<CommentActivityDto> recentCommentDtos = userActivity.getRecentCommentActivityDtos();
@@ -148,6 +154,19 @@ public class BasicUserActivityService implements UserActivityService {
     userActivityRepository.save(userActivity);
   }
 
+  @Transactional
+  @Override
+  public void updateSubscription(UUID userId, Subscription subscription) {
+    SubscriptionDto dto = subscriptionMapper.toDto(subscription);
+
+    UserActivity userActivity = getUserActivityOrThrow(userId);
+    List<SubscriptionDto> subscriptionDtos = userActivity.getSubscriptionDtos();
+    int idx = subscriptionDtos.indexOf(dto);
+    if (idx != -1) {
+      subscriptionDtos.set(idx, dto);
+      userActivityRepository.save(userActivity);
+    }
+  }
 
   private UserActivity getUserActivityOrThrow(UUID userId) {
     return userActivityRepository.findByUser_UserId(userId)

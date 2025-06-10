@@ -18,6 +18,8 @@ public interface UserActivityService {
 
   void removeRecentComment(UUID userId, Comment comment);
 
+  void updateRecentComment(UUID userId, Comment comment);
+
   void addCommentLike(UUID userId, CommentLike commentLike);
 
   void removeCommentLike(UUID userId, CommentLike commentLike);
@@ -29,6 +31,8 @@ public interface UserActivityService {
   void addSubscription(UUID userId, Subscription subscription);
 
   void removeSubscription(UUID userId, Subscription subscription);
+
+  void updateSubscription(UUID userId, Subscription subscription);
 
 
 }
