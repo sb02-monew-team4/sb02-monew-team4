@@ -11,13 +11,14 @@ import org.springframework.data.domain.Pageable;
 
 public interface CommentService {
   CommentDto register(CommentRegisterRequest request);
-  CursorPageResponseCommentDto findCommentsByArticleWithCursorPaging(
+  CursorPageResponseCommentDto getCommentsByArticleWithCursor(
       UUID articleId,
       String orderBy,
       String direction,
       String cursor,
       String after,
-      int limit
+      int limit,
+      UUID requesterId
   );
   Page<CommentDto> getMyComments(UUID userId, Pageable pageable);
   CommentLikeDto likeComment(UUID commentId, UUID userId);
