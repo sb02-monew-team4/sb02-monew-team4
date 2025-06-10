@@ -6,8 +6,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 import com.team4.monew.dto.UserActivity.UserActivityDto;
+import com.team4.monew.dto.user.UserDto;
+import com.team4.monew.entity.User;
 import com.team4.monew.entity.UserActivity;
 import com.team4.monew.mapper.UserActivityMapper;
+import com.team4.monew.mapper.UserMapper;
 import com.team4.monew.repository.UserActivityRepository;
 import com.team4.monew.service.basic.BasicUserActivityService;
 import java.time.Instant;
@@ -27,6 +30,9 @@ public class UserActivityServiceTest {
   private UserActivityMapper userActivityMapper;
 
   @MockitoBean
+  private UserMapper userMapper;
+
+  @MockitoBean
   private UserActivityRepository userActivityRepository;
 
   @InjectMocks
@@ -38,7 +44,24 @@ public class UserActivityServiceTest {
     // given
     UUID userId = UUID.randomUUID();
 
-    UserActivity userActivity = new UserActivity(userId);
+    User user = new User(
+        userId,
+        "test@test.com",
+        "test",
+        "test",
+        false,
+        Instant.now(),
+        List.of()
+    );
+
+    UserDto userDto = new UserDto(
+        userId,
+        "test@test.com",
+        "test",
+        Instant.now()
+    );
+
+    UserActivity userActivity = new UserActivity(userDto);
 
     UserActivityDto userActivityDto = new UserActivityDto(
         userId,
@@ -53,13 +76,14 @@ public class UserActivityServiceTest {
 
     given(userActivityRepository.save(any(UserActivity.class))).willReturn(userActivity);
     given(userActivityMapper.toDto(userActivity)).willReturn(userActivityDto);
+    given(userMapper.toDto(user)).willReturn(userDto);
 
     // when
-    UserActivityDto result = userActivityService.create(userId);
+    UserActivityDto result = userActivityService.create(user);
 
     // then
     assertThat(result.id()).isEqualTo(userActivityDto.id());
     assertThat(result.email()).isEqualTo(userActivityDto.email());
   }
-  
+
 }

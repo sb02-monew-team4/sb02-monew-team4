@@ -8,8 +8,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface CommentActivityMapper {
 
-  @Mapping(source = "news.id", target = "articleId")
-  @Mapping(source = "news.title", target = "articleTitle")
+  @Mapping(source = "article.id", target = "articleId")
+  @Mapping(source = "article.title", target = "articleTitle")
   @Mapping(source = "user.id", target = "userId")
   @Mapping(source = "user.nickname", target = "userNickname")
   @Mapping(source = "content", target = "content")

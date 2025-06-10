@@ -3,17 +3,24 @@ package com.team4.monew.service.basic;
 import com.team4.monew.dto.notifications.CursorPageResponseNotificationDto;
 import com.team4.monew.dto.notifications.NotificationDto;
 import com.team4.monew.entity.Notification;
+import com.team4.monew.entity.ResourceType;
+import com.team4.monew.entity.User;
 import com.team4.monew.exception.notification.NotificationNotFoundException;
+import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.mapper.NotificationMapper;
 import com.team4.monew.repository.NotificationRepository;
+import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.NotificationService;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 @Transactional
@@ -61,6 +68,20 @@ public class BasicNotificationService implements NotificationService {
     );
   }
 
+//  @Override
+//  public Notification create(String keyword, int registerCnt, ResourceType resourceType, UUID resourceId, UUID userId) {
+//    String content = null;
+//    if(resourceType == ResourceType.INTEREST){
+//      content = keyword + "와 관련된 기사가 " + registerCnt + "건 등록되었습니다.";
+//    }else if(resourceType == ResourceType.COMMENT){
+//      content = keyword + "님이 나의 댓글을 좋아합니다.";
+//    }
+//    User user = userRepository.findById(userId)
+//        .orElseThrow(() -> UserNotFoundException.byId(userId));
+//    Notification notification = Notification.create(user, content, resourceId, resourceType);
+//    return notificationRepository.save(notification);
+//  }
+
   @Override
   public List<Notification> updateAll(UUID userId) {
     List<Notification> notifications = notificationRepository.findByUserIdAndConfirmedFalse(userId);
@@ -84,5 +105,9 @@ public class BasicNotificationService implements NotificationService {
     return notification;
   }
 
-
+  @Override
+  public long deleteConfirmedNotificationsOlderThan7Days() {
+    Instant cutoffDateTime = Instant.now().minus(7, ChronoUnit.DAYS);
+    return notificationRepository.deleteByConfirmedTrueAndCreatedAtBefore(cutoffDateTime);
+  }
 }
