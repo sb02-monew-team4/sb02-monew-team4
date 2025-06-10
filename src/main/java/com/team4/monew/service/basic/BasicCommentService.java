@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -37,13 +38,14 @@ public class BasicCommentService implements CommentService {
   private final CommentLikeRepository commentLikeRepository;
   private final CommentMapper commentMapper;
 
+  @Transactional
   @Override
   public CommentDto register(CommentRegisterRequest request) {
     User user = userRepository.findById(request.userId())
         .orElseThrow(() -> new MonewException(ErrorCode.USER_NOT_FOUND));
 
     Article news = newsRepository.findById(request.articleId())
-        .orElseThrow(() -> new MonewException(ErrorCode.COMMENT_NOT_FOUND)); // NEWS_NOT_FOUND 로 바꿀 예정
+        .orElseThrow(() -> new MonewException(ErrorCode.NEWS_NOT_FOUND));
 
     Comment comment = new Comment(user, news, request.content());
     Comment saved = commentRepository.save(comment);
@@ -52,19 +54,21 @@ public class BasicCommentService implements CommentService {
   }
 
   @Override
-  public CursorPageResponseCommentDto findCommentsByArticleWithCursorPaging(
+  public CursorPageResponseCommentDto getCommentsByArticleWithCursor(
       UUID articleId,
       String orderBy,
       String direction,
       String cursor,
       String after,
-      int limit
+      int limit,
+      UUID requesterId
   ) {
     List<Comment> comments = commentRepository.findCommentsByArticleWithCursorPaging(
-        articleId, orderBy, direction, cursor, after, limit);
+        articleId, orderBy, direction, cursor, after, limit
+    );
 
     List<CommentDto> dtoList = comments.stream()
-        .map(commentMapper::toDto)
+        .map(comment -> commentMapper.toDto(comment, requesterId))
         .toList();
 
     String nextCursor = null;
@@ -76,7 +80,6 @@ public class BasicCommentService implements CommentService {
     }
 
     Long total = commentRepository.countByNewsId(articleId);
-
     boolean hasNext = comments.size() == limit;
 
     return new CursorPageResponseCommentDto(
@@ -109,7 +112,7 @@ public class BasicCommentService implements CommentService {
     CommentLike like = new CommentLike(null, comment, user, Instant.now());
     commentLikeRepository.save(like);
 
-    comment.setLikeCount(comment.getLikeCount() + 1);
+    comment.increaseLikeCount();
     commentRepository.save(comment);
 
     return CommentLikeDto.from(like);
@@ -127,7 +130,7 @@ public class BasicCommentService implements CommentService {
 
     commentLikeRepository.delete(like);
 
-    comment.setLikeCount(comment.getLikeCount() - 1);
+    comment.decreaseLikeCount();
     commentRepository.save(comment);
   }
 
