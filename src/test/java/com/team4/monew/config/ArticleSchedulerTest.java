@@ -1,15 +1,18 @@
 package com.team4.monew.config;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.team4.monew.entity.Article;
-import com.team4.monew.entity.Interest;
-import com.team4.monew.entity.InterestKeyword;
 import com.team4.monew.repository.ArticleRepository;
+import com.team4.monew.service.collector.NaverApiCollectorService;
 import com.team4.monew.service.collector.RssCollectorService;
 import com.team4.monew.service.filter.KeywordFilterService;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +24,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class ArticleSchedulerTest {
 
   @Mock
-  private RssCollectorService collector;
+  private RssCollectorService rssCollector;
+  @Mock
+  private NaverApiCollectorService naverCollector;
   @Mock
   private KeywordFilterService filter;
   @Mock
@@ -31,28 +36,44 @@ public class ArticleSchedulerTest {
   private ArticleScheduler scheduler;
 
   @Test
-  @DisplayName("필터링된 아티클 저장 검증")
-  void validateFilteredArticleSaving() {
-    List<InterestKeyword> keywords = new ArrayList<>();
-    InterestKeyword keyword = new InterestKeyword(
-        UUID.randomUUID(),
-        null,
-        "개발자"
-    );
+  @DisplayName("필터링된 아티클, 네이버 아티클 저장 검증")
+  void hourlyArticleProcessingTest() {
+    Article rssArticle =
+        createArticle("RSS 기사", "RSS 기사 제목", "http://rss.com/1", "RSS 기사입니다.");
+    Article naverArticle =
+        createArticle("Naver 기사", "Naver 기사 제목", "http://naver.com/1", "Naver 기사입니다.");
 
-    keywords.add(keyword);
+    List<Article> rssArticles = List.of(rssArticle);
+    List<Article> naverArticles = List.of(naverArticle);
 
-    List<Article> articles = collector.collectFromAllSources();
+    when(rssCollector.collectFromAllSources()).thenReturn(List.of(rssArticle));
+    when(naverCollector.collectArticles()).thenReturn(List.of(naverArticle));
 
-    Interest interest = new Interest(
-        UUID.randomUUID(),
-        "testName",
-        0L,
+    when(filter.filterArticles(rssArticles)).thenReturn(rssArticles);
+    when(filter.filterArticles(naverArticles)).thenReturn(naverArticles);
+
+    when(repository.existsByOriginalLink(anyString())).thenReturn(false);
+
+    scheduler.hourlyArticleProcessing();
+
+    verify(rssCollector, times(1)).collectFromAllSources();
+    verify(naverCollector, times(1)).collectArticles();
+
+    verify(filter, times(1)).filterArticles(rssArticles);
+    verify(filter, times(1)).filterArticles(naverArticles);
+
+    verify(repository, times(2)).save(any(Article.class));
+  }
+
+  private Article createArticle(String source, String title, String link, String summary) {
+    return new Article(
+        source,
+        link,
+        title,
         Instant.now(),
-        Instant.now(),
-        keywords,
-        null
+        summary
     );
   }
+
 
 }
