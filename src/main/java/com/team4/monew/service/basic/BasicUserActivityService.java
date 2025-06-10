@@ -109,7 +109,7 @@ public class BasicUserActivityService implements UserActivityService {
     CommentLikeActivityDto dto = commentLikeActivityMapper.toDto(commentLike);
 
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    userActivity.getRecentCommentActivityDtos().remove(dto);
+    userActivity.getRecentCommentLikeActivityDtos().remove(dto);
     userActivityRepository.save(userActivity);
   }
 
