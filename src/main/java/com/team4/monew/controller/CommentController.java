@@ -1,25 +1,43 @@
 package com.team4.monew.controller;
 
 import com.team4.monew.dto.comment.*;
+import com.team4.monew.exception.ErrorCode;
+import com.team4.monew.exception.MonewException;
 import com.team4.monew.service.basic.BasicCommentService;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/comments")
 public class CommentController {
 
   private final BasicCommentService commentService;
 
-  public CommentController(BasicCommentService commentService) {
-    this.commentService = commentService;
+  @PostMapping
+  public ResponseEntity<CommentDto> register(
+      @Valid @RequestBody CommentRegisterRequest request
+  ) {
+    CommentDto response = commentService.register(request);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+  }
+
+  @PatchMapping("/{commentId}")
+  public ResponseEntity<CommentDto> update(
+      @PathVariable UUID commentId,
+      @RequestHeader("Monew-Request-User-ID") UUID requesterId,
+      @Valid @RequestBody CommentUpdateRequest request
+  ) {
+    CommentDto response = commentService.update(commentId, requesterId, request);
+    return ResponseEntity.ok(response);
   }
 
   @GetMapping
-  public ResponseEntity<CursorPageResponseCommentDto> findComments(
+  public ResponseEntity<CursorPageResponseCommentDto> getCommentsByArticleWithCursor(
       @RequestParam UUID articleId,
       @RequestParam String orderBy,
       @RequestParam String direction,
@@ -28,18 +46,22 @@ public class CommentController {
       @RequestParam int limit,
       @RequestHeader("Monew-Request-User-ID") UUID requesterId
   ) {
+    if (!orderBy.equals("createdAt") && !orderBy.equals("likeCount")) {
+      throw new MonewException(ErrorCode.INVALID_ORDER_BY);
+    }
 
-    CursorPageResponseCommentDto response = commentService.findCommentsByArticleWithCursorPaging(
-        articleId, orderBy, direction, cursor, after, limit);
+    if (!direction.equalsIgnoreCase("ASC") && !direction.equalsIgnoreCase("DESC")) {
+      throw new MonewException(ErrorCode.INVALID_SORT_DIRECTION);
+    }
+
+    if (limit < 1 || limit > 100) {
+      throw new MonewException(ErrorCode.INVALID_LIMIT);
+    }
+
+    CursorPageResponseCommentDto response = commentService.getCommentsByArticleWithCursor(
+        articleId, orderBy, direction, cursor, after, limit, requesterId
+    );
     return ResponseEntity.ok(response);
-  }
-
-  @PostMapping
-  public ResponseEntity<CommentDto> register(
-      @Valid @RequestBody CommentRegisterRequest request
-  ) {
-    CommentDto created = commentService.register(request);
-    return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
   @PostMapping("/{commentId}/comment-likes")
@@ -63,28 +85,18 @@ public class CommentController {
   @DeleteMapping("/{commentId}")
   public ResponseEntity<Void> softDelete(
       @PathVariable UUID commentId,
-      @RequestHeader("Monew-Request-User-ID") UUID userId
+      @RequestHeader("Monew-Request-User-ID") UUID requesterId
   ) {
-    commentService.softDelete(commentId, userId);
+    commentService.softDelete(commentId, requesterId);
     return ResponseEntity.noContent().build();
-  }
-
-  @PatchMapping("/{commentId}")
-  public ResponseEntity<CommentDto> update(
-      @PathVariable UUID commentId,
-      @RequestHeader("Monew-Request-User-ID") UUID requesterId,
-      @Valid @RequestBody CommentUpdateRequest request
-  ) {
-    CommentDto updated = commentService.update(commentId, requesterId, request);
-    return ResponseEntity.ok(updated);
   }
 
   @DeleteMapping("/{commentId}/hard")
   public ResponseEntity<Void> hardDelete(
       @PathVariable UUID commentId,
-      @RequestHeader("Monew-Request-User-ID") UUID userId
+      @RequestHeader("Monew-Request-User-ID") UUID requesterId
   ) {
-    commentService.hardDelete(commentId, userId);
+    commentService.hardDelete(commentId, requesterId);
     return ResponseEntity.noContent().build();
   }
 }
