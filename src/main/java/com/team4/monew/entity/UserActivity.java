@@ -1,12 +1,11 @@
 package com.team4.monew.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import com.team4.monew.dto.UserActivity.CommentActivityDto;
+import com.team4.monew.dto.UserActivity.CommentLikeActivityDto;
+import com.team4.monew.dto.article.ArticleViewDto;
+import com.team4.monew.dto.interest.SubscriptionDto;
+import com.team4.monew.dto.user.UserDto;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,47 +16,34 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "user_activities")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Document(collection = "user_activities")
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserActivity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(name = "user_id", nullable = false, unique = true)
-  private UUID userId;
+  private UserDto user;
 
-  @ElementCollection
-  @Column(name = "recent_comment_ids", columnDefinition = "uuid[]")
-  private List<UUID> recentCommentIds;
-
-  @ElementCollection
-  @Column(name = "recent_comment_like_ids", columnDefinition = "uuid[]")
-  private List<UUID> recentCommentLikeIds;
-
-  @ElementCollection
-  @Column(name = "recent_article_views_ids", columnDefinition = "uuid[]")
-  private List<UUID> recentArticleViewIds;
-
-  @ElementCollection
-  @Column(name = "subscription_ids", columnDefinition = "uuid[]")
-  private List<UUID> subscriptionIds;
+  private List<CommentActivityDto> recentCommentActivityDtos;
+  private List<CommentLikeActivityDto> recentCommentLikeActivityDtos;
+  private List<ArticleViewDto> recentArticleViewDtos;
+  private List<SubscriptionDto> subscriptionDtos;
 
   @CreatedDate
   @LastModifiedDate
-  @Column(name = "last_updated")
   private Instant lastUpdated;
 
-  public UserActivity(UUID userId) {
-    this.userId = userId;
-    recentCommentIds = new ArrayList<>();
-    recentCommentLikeIds = new ArrayList<>();
-    recentArticleViewIds = new ArrayList<>();
-    subscriptionIds = new ArrayList<>();
+  public UserActivity(UserDto user) {
+    this.id = UUID.randomUUID();
+    this.user = user;
+    recentCommentActivityDtos = new ArrayList<>();
+    recentCommentLikeActivityDtos = new ArrayList<>();
+    recentArticleViewDtos = new ArrayList<>();
+    subscriptionDtos = new ArrayList<>();
   }
 }
