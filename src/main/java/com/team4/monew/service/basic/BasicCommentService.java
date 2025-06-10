@@ -1,5 +1,7 @@
 package com.team4.monew.service.basic;
 
+import static com.team4.monew.entity.QComment.comment;
+
 import com.team4.monew.dto.comment.CommentDto;
 import com.team4.monew.dto.comment.CommentLikeDto;
 import com.team4.monew.dto.comment.CommentRegisterRequest;
@@ -11,6 +13,7 @@ import com.team4.monew.entity.Article;
 import com.team4.monew.entity.User;
 import com.team4.monew.exception.MonewException;
 import com.team4.monew.exception.ErrorCode;
+import com.team4.monew.mapper.CommentLikeMapper;
 import com.team4.monew.mapper.CommentMapper;
 import com.team4.monew.repository.CommentLikeRepository;
 import com.team4.monew.repository.CommentRepository;
@@ -37,6 +40,7 @@ public class BasicCommentService implements CommentService {
   private final CommentRepository commentRepository;
   private final CommentLikeRepository commentLikeRepository;
   private final CommentMapper commentMapper;
+  private final CommentLikeMapper commentLikeMapper;
 
   @Transactional
   @Override
@@ -49,8 +53,9 @@ public class BasicCommentService implements CommentService {
 
     Comment comment = new Comment(user, article, request.content());
     Comment saved = commentRepository.save(comment);
+    //increment
 
-    return CommentDto.from(saved);
+    return commentMapper.toDto(saved, request.userId());
   }
 
   @Override
@@ -95,9 +100,10 @@ public class BasicCommentService implements CommentService {
   @Override
   public Page<CommentDto> getMyComments(UUID userId, Pageable pageable) {
     Page<Comment> comments = commentRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
-    return comments.map(CommentDto::from);
+    return comments.map(comment -> commentMapper.toDto(comment, userId));
   }
 
+  @Transactional
   @Override
   public CommentLikeDto likeComment(UUID commentId, UUID userId) {
     Comment comment = commentRepository.findById(commentId)
@@ -115,9 +121,10 @@ public class BasicCommentService implements CommentService {
     comment.increaseLikeCount();
     commentRepository.save(comment);
 
-    return CommentLikeDto.from(like);
+    return commentLikeMapper.toDto(like);
   }
 
+  @Transactional
   @Override
   public void unlikeComment(UUID commentId, UUID userId) {
     Comment comment = commentRepository.findById(commentId)
@@ -146,9 +153,10 @@ public class BasicCommentService implements CommentService {
     comment.updateContent(request.content());
     Comment saved = commentRepository.save(comment);
 
-    return CommentDto.from(saved);
+    return commentMapper.toDto(saved, userId);
   }
 
+  @Transactional
   @Override
   public void softDelete(UUID commentId, UUID userId) {
     Comment comment = commentRepository.findById(commentId)
@@ -157,6 +165,8 @@ public class BasicCommentService implements CommentService {
     if (!comment.getUser().getId().equals(userId)) {
       throw new MonewException(ErrorCode.COMMENT_FORBIDDEN);
     }
+
+    //decrement
 
     comment.markDeleted();
     commentRepository.save(comment);
