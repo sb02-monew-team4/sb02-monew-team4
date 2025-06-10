@@ -26,7 +26,17 @@ public enum ErrorCode {
   COMMENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "댓글이 존재하지 않습니다."),
   COMMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "댓글에 대한 권한이 없습니다."),
   COMMENT_LIKE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "좋아요를 누르지 않은 상태입니다."),
-  COMMENT_ALREADY_LIKED(HttpStatus.BAD_REQUEST, "이미 좋아요를 눌렀습니다.");
+  COMMENT_ALREADY_LIKED(HttpStatus.BAD_REQUEST, "이미 좋아요를 눌렀습니다."),
+  INVALID_ORDER_BY(HttpStatus.BAD_REQUEST, "orderBy 값은 'likeCount' 또는 'createdAt'만 가능합니다."),
+  INVALID_CURSOR_FORMAT(HttpStatus.BAD_REQUEST, "cursor 값이 잘못되었습니다."),
+  INVALID_AFTER_FORMAT(HttpStatus.BAD_REQUEST, "after 값이 잘못되었습니다."),
+  INVALID_SORT_DIRECTION(HttpStatus.BAD_REQUEST, "direction 값은 'ASC' 또는 'DESC'만 가능합니다."),
+  INVALID_LIMIT(HttpStatus.BAD_REQUEST, "limit 값은 1 이상 100 이하이어야 합니다."),
+
+  // Interest
+  INTEREST_ALREADY_EXISTS(HttpStatus.CONFLICT, "유사한 관심사가 이미 존재합니다."),
+  INTEREST_NOT_FOUND(HttpStatus.NOT_FOUND, "관심사를 찾을 수 없습니다."),
+  INTEREST_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 관심사에 대한 권한이 없습니다.");
 
   private HttpStatus status;
   private String message;
