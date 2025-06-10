@@ -1,5 +1,7 @@
 package com.team4.monew.entity;
 
+import com.team4.monew.exception.ErrorCode;
+import com.team4.monew.exception.MonewException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -81,7 +83,7 @@ public class Comment {
 
   public void updateContent(String content) {
     if (this.isDeleted) {
-      throw new IllegalStateException("삭제된 댓글은 수정할 수 없습니다.");
+      throw new MonewException(ErrorCode.COMMENT_ALREADY_DELETED);
     }
     this.content = content;
   }
