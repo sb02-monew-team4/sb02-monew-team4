@@ -102,8 +102,14 @@ class CommentControllerTest {
         false
     );
 
-    Mockito.when(commentService.findCommentsByArticleWithCursorPaging(
-        any(), any(), any(), any(), any(), anyInt()
+    Mockito.when(commentService.getCommentsByArticleWithCursor(
+        any(UUID.class),
+        any(String.class),
+        any(String.class),
+        any(String.class),
+        any(String.class),
+        anyInt(),
+        any(UUID.class)
     )).thenReturn(response);
 
     mockMvc.perform(get("/api/comments")
