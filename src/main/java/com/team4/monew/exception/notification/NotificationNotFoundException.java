@@ -1,8 +1,6 @@
 package com.team4.monew.exception.notification;
 
-import com.team4.monew.entity.Notification;
 import com.team4.monew.exception.ErrorCode;
-import com.team4.monew.exception.user.UserNotFoundException;
 import java.util.Map;
 import java.util.UUID;
 

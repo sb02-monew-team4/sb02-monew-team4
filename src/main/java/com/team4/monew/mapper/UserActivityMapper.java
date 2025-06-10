@@ -1,7 +1,7 @@
 package com.team4.monew.mapper;
 
 import com.team4.monew.dto.UserActivity.UserActivityDto;
-import com.team4.monew.entity.UserActivityDocument;
+import com.team4.monew.entity.UserActivity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -16,6 +16,6 @@ public interface UserActivityMapper {
   @Mapping(source = "recentCommentActivityDtos", target = "comments")
   @Mapping(source = "recentCommentLikeActivityDtos", target = "commentLikes")
   @Mapping(source = "recentArticleViewDtos", target = "articleViews")
-  UserActivityDto toDto(UserActivityDocument document);
+  UserActivityDto toDto(UserActivity document);
 
 }

@@ -3,8 +3,8 @@ package com.team4.monew.service.basic;
 import com.team4.monew.dto.UserActivity.CommentActivityDto;
 import com.team4.monew.dto.UserActivity.CommentLikeActivityDto;
 import com.team4.monew.dto.UserActivity.UserActivityDto;
+import com.team4.monew.dto.article.ArticleViewDto;
 import com.team4.monew.dto.interest.SubscriptionDto;
-import com.team4.monew.dto.news.ArticleViewDto;
 import com.team4.monew.dto.user.UserDto;
 import com.team4.monew.entity.ArticleView;
 import com.team4.monew.entity.Comment;
@@ -12,14 +12,13 @@ import com.team4.monew.entity.CommentLike;
 import com.team4.monew.entity.Subscription;
 import com.team4.monew.entity.User;
 import com.team4.monew.entity.UserActivity;
-import com.team4.monew.entity.UserActivityDocument;
 import com.team4.monew.exception.userActivity.UserActivityNotFoundException;
-import com.team4.monew.exception.userActivity.UserActivityNotFoundInMongoException;
+import com.team4.monew.mapper.ArticleViewMapper;
 import com.team4.monew.mapper.CommentActivityMapper;
 import com.team4.monew.mapper.CommentLikeActivityMapper;
 import com.team4.monew.mapper.SubscriptionMapper;
 import com.team4.monew.mapper.UserActivityMapper;
-import com.team4.monew.repository.UserActivityMongoRepository;
+import com.team4.monew.mapper.UserMapper;
 import com.team4.monew.repository.UserActivityRepository;
 import com.team4.monew.service.UserActivityService;
 import com.team4.monew.util.UserActivityListUtils;
@@ -40,25 +39,21 @@ public class BasicUserActivityService implements UserActivityService {
   private final UserMapper userMapper;
   private final ArticleViewMapper articleViewMapper;
   private final CommentLikeActivityMapper commentLikeActivityMapper;
-  private final UserActivityMongoRepository userActivityMongoRepository;
 
   @Transactional
   @Override
   public UserActivityDto create(User user) {
-    UserDto dto = UserMapper.toDto(user);
-    UserActivity userActivity = new UserActivity(dto.id());
+    UserDto dto = userMapper.toDto(user);
+    UserActivity userActivity = new UserActivity(dto);
     userActivityRepository.save(userActivity);
 
-    UserActivityDocument userActivityDocument = new UserActivityDocument(userActivity.getId(),
-        dto);
-    userActivityMongoRepository.save(userActivityDocument);
-    return userActivityMapper.toDto(userActivityDocument);
+    return userActivityMapper.toDto(userActivity);
   }
 
   @Override
   public UserActivityDto getByUserId(UUID userId) {
-    UserActivityDocument userActivityDocument = getUserActivityDocOrThrow(userId);
-    return userActivityMapper.toDto(userActivityDocument);
+    UserActivity userActivity = getUserActivityOrThrow(userId);
+    return userActivityMapper.toDto(userActivity);
   }
 
   @Transactional
@@ -67,14 +62,9 @@ public class BasicUserActivityService implements UserActivityService {
     CommentActivityDto dto = commentActivityMapper.toDto(comment);
 
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    List<UUID> recentCommentIds = userActivity.getRecentCommentIds();
-    UserActivityListUtils.addToLimitedList(recentCommentIds, comment.getId());
-    userActivityRepository.save(userActivity);
-
-    UserActivityDocument userActivityDocument = getUserActivityDocOrThrow(userId);
-    List<CommentActivityDto> recentCommentDtos = userActivityDocument.getRecentCommentActivityDtos();
+    List<CommentActivityDto> recentCommentDtos = userActivity.getRecentCommentActivityDtos();
     UserActivityListUtils.addToLimitedList(recentCommentDtos, dto);
-    userActivityMongoRepository.save(userActivityDocument);
+    userActivityRepository.save(userActivity);
   }
 
   @Transactional
@@ -83,12 +73,23 @@ public class BasicUserActivityService implements UserActivityService {
     CommentActivityDto dto = commentActivityMapper.toDto(comment);
 
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    userActivity.getRecentCommentIds().remove(comment.getId());
+    userActivity.getRecentCommentActivityDtos().remove(dto);
     userActivityRepository.save(userActivity);
+  }
 
-    UserActivityDocument userActivityDocument = getUserActivityDocOrThrow(userId);
-    userActivityDocument.getRecentCommentActivityDtos().remove(dto);
-    userActivityMongoRepository.save(userActivityDocument);
+  @Transactional
+  @Override
+  public void updateRecentComment(UUID userId, Comment comment) {
+    CommentActivityDto dto = commentActivityMapper.toDto(comment);
+
+    UserActivity userActivity = getUserActivityOrThrow(userId);
+    List<CommentActivityDto> recentCommentDtos = userActivity.getRecentCommentActivityDtos();
+
+    int idx = recentCommentDtos.indexOf(dto);
+    if (idx != -1) {
+      recentCommentDtos.set(idx, dto);
+      userActivityRepository.save(userActivity);
+    }
   }
 
   @Transactional
@@ -97,14 +98,9 @@ public class BasicUserActivityService implements UserActivityService {
     CommentLikeActivityDto dto = commentLikeActivityMapper.toDto(commentLike);
 
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    List<UUID> recentCommentLikeIds = userActivity.getRecentCommentLikeIds();
-    UserActivityListUtils.addToLimitedList(recentCommentLikeIds, commentLike.getId());
-    userActivityRepository.save(userActivity);
-
-    UserActivityDocument userActivityDocument = getUserActivityDocOrThrow(userId);
-    List<CommentLikeActivityDto> recentCommentLikeActivityDtos = userActivityDocument.getRecentCommentLikeActivityDtos();
+    List<CommentLikeActivityDto> recentCommentLikeActivityDtos = userActivity.getRecentCommentLikeActivityDtos();
     UserActivityListUtils.addToLimitedList(recentCommentLikeActivityDtos, dto);
-    userActivityMongoRepository.save(userActivityDocument);
+    userActivityRepository.save(userActivity);
   }
 
   @Transactional
@@ -113,12 +109,8 @@ public class BasicUserActivityService implements UserActivityService {
     CommentLikeActivityDto dto = commentLikeActivityMapper.toDto(commentLike);
 
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    userActivity.getRecentCommentLikeIds().remove(commentLike.getId());
+    userActivity.getRecentCommentLikeActivityDtos().remove(dto);
     userActivityRepository.save(userActivity);
-
-    UserActivityDocument userActivityDocument = getUserActivityDocOrThrow(userId);
-    userActivityDocument.getRecentCommentActivityDtos().remove(dto);
-    userActivityMongoRepository.save(userActivityDocument);
   }
 
   @Transactional
@@ -127,14 +119,9 @@ public class BasicUserActivityService implements UserActivityService {
     ArticleViewDto dto = articleViewMapper.toDto(articleView);
 
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    List<UUID> recentArticleViewIds = userActivity.getRecentArticleViewIds();
-    UserActivityListUtils.addToLimitedList(recentArticleViewIds, articleView.getId());
-    userActivityRepository.save(userActivity);
-
-    UserActivityDocument userActivityDocument = getUserActivityDocOrThrow(userId);
-    List<ArticleViewDto> recentArticleViewDtos = userActivityDocument.getRecentArticleViewDtos();
+    List<ArticleViewDto> recentArticleViewDtos = userActivity.getRecentArticleViewDtos();
     UserActivityListUtils.addToLimitedList(recentArticleViewDtos, dto);
-    userActivityMongoRepository.save(userActivityDocument);
+    userActivityRepository.save(userActivity);
   }
 
   @Transactional
@@ -143,12 +130,8 @@ public class BasicUserActivityService implements UserActivityService {
     ArticleViewDto dto = articleViewMapper.toDto(articleView);
 
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    userActivity.getRecentArticleViewIds().remove(articleView.getId());
+    userActivity.getRecentArticleViewDtos().remove(dto);
     userActivityRepository.save(userActivity);
-
-    UserActivityDocument userActivityDocument = getUserActivityDocOrThrow(userId);
-    userActivityDocument.getRecentArticleViewDtos().remove(dto);
-    userActivityMongoRepository.save(userActivityDocument);
   }
 
   @Transactional
@@ -157,12 +140,8 @@ public class BasicUserActivityService implements UserActivityService {
     SubscriptionDto dto = subscriptionMapper.toDto(subscription);
 
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    userActivity.getSubscriptionIds().add(subscription.getId());
+    userActivity.getSubscriptionDtos().add(dto);
     userActivityRepository.save(userActivity);
-
-    UserActivityDocument userActivityDocument = getUserActivityDocOrThrow(userId);
-    userActivityDocument.getSubscriptionDtos().add(dto);
-    userActivityMongoRepository.save(userActivityDocument);
   }
 
   @Transactional
@@ -171,22 +150,26 @@ public class BasicUserActivityService implements UserActivityService {
     SubscriptionDto dto = subscriptionMapper.toDto(subscription);
 
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    userActivity.getSubscriptionIds().remove(subscription.getId());
+    userActivity.getSubscriptionDtos().remove(dto);
     userActivityRepository.save(userActivity);
-
-    UserActivityDocument userActivityDocument = getUserActivityDocOrThrow(userId);
-    userActivityDocument.getSubscriptionDtos().remove(dto);
-    userActivityMongoRepository.save(userActivityDocument);
   }
 
+  @Transactional
+  @Override
+  public void updateSubscription(UUID userId, Subscription subscription) {
+    SubscriptionDto dto = subscriptionMapper.toDto(subscription);
+
+    UserActivity userActivity = getUserActivityOrThrow(userId);
+    List<SubscriptionDto> subscriptionDtos = userActivity.getSubscriptionDtos();
+    int idx = subscriptionDtos.indexOf(dto);
+    if (idx != -1) {
+      subscriptionDtos.set(idx, dto);
+      userActivityRepository.save(userActivity);
+    }
+  }
 
   private UserActivity getUserActivityOrThrow(UUID userId) {
-    return userActivityRepository.findByUserId(userId)
+    return userActivityRepository.findByUser_Id(userId)
         .orElseThrow(() -> UserActivityNotFoundException.byUserId(userId));
-  }
-
-  private UserActivityDocument getUserActivityDocOrThrow(UUID userId) {
-    return userActivityMongoRepository.findByUser_UserId(userId)
-        .orElseThrow(() -> UserActivityNotFoundInMongoException.byUserId(userId));
   }
 }

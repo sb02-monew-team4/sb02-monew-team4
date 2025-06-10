@@ -2,6 +2,7 @@ package com.team4.monew.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -16,6 +17,7 @@ import com.team4.monew.mapper.NotificationMapper;
 import com.team4.monew.repository.NotificationRepository;
 import com.team4.monew.service.basic.BasicNotificationService;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,6 +25,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -40,12 +44,11 @@ public class NotificationServiceTest {
   @Mock
   private NotificationMapper notificationMapper;
 
+  @Captor
+  private ArgumentCaptor<Instant> instantCaptor;
+
   private UUID notificationId;
   private UUID userId;
-  private String content;
-  private UUID resourceId;
-  private ResourceType resourceType;
-  private boolean confirmed;
 
   private User user;
   private Notification notification;
@@ -54,15 +57,15 @@ public class NotificationServiceTest {
   void setUp() {
     userId = UUID.randomUUID();
     notificationId = UUID.randomUUID();
-    content = "ㅇㅇ님이 나의 댓글을 좋아합니다.";
-    resourceId = UUID.randomUUID();
-    resourceType = ResourceType.COMMENT;
+    String content = "ㅇㅇ님이 나의 댓글을 좋아합니다.";
+    UUID resourceId = UUID.randomUUID();
+    ResourceType resourceType = ResourceType.COMMENT;
 
     user = User.create("test@example.com", "testUser", "password123");
     ReflectionTestUtils.setField(user, "id", userId);
     ReflectionTestUtils.setField(user, "createdAt", Instant.now());
 
-    notification = Notification.create(user, content, resourceId, resourceType, confirmed);
+    notification = Notification.create(user, content, resourceId, resourceType);
     ReflectionTestUtils.setField(notification, "id", notificationId);
     ReflectionTestUtils.setField(notification, "createdAt", Instant.now());
     ReflectionTestUtils.setField(notification, "updatedAt", Instant.now());
@@ -230,6 +233,25 @@ public class NotificationServiceTest {
     assertThat(exception.getDetails().get("notificationId")).isEqualTo(notificationId);
 
     then(notificationRepository).should().findById(notificationId);
+  }
+
+  @Test
+  @DisplayName("확인된 알림 삭제_성공")
+  void deleteConfirmedNotificationsOlderThan7Days_Success() {
+    // given
+    long deleteCount = 3L;
+
+    given(notificationRepository.deleteByConfirmedTrueAndCreatedAtBefore(any())).willReturn(deleteCount);
+
+    // when
+    long result = notificationService.deleteConfirmedNotificationsOlderThan7Days();
+
+    // then
+    assertThat(result).isEqualTo(deleteCount);
+    then(notificationRepository).should().deleteByConfirmedTrueAndCreatedAtBefore(instantCaptor.capture());
+
+    Instant cutoffDateTime = Instant.now().minus(7, ChronoUnit.DAYS);
+    assertThat(instantCaptor.getValue()).isBeforeOrEqualTo(cutoffDateTime);
   }
 
 

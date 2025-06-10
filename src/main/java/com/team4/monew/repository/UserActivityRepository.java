@@ -3,9 +3,9 @@ package com.team4.monew.repository;
 import com.team4.monew.entity.UserActivity;
 import java.util.Optional;
 import java.util.UUID;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface UserActivityRepository extends JpaRepository<UserActivity, UUID> {
+public interface UserActivityRepository extends MongoRepository<UserActivity, String> {
 
-  Optional<UserActivity> findByUserId(UUID userId);
+  Optional<UserActivity> findByUser_Id(UUID userId);
 }

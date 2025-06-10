@@ -100,8 +100,8 @@ public class NotificationControllerTest {
     // given
     UUID userId = UUID.randomUUID();
 
-    Notification updatedNotification1 = Notification.create(mock(User.class), "알림메시지1", UUID.randomUUID(), ResourceType.COMMENT, false);
-    Notification updatedNotification2 = Notification.create(mock(User.class), "알림메시지2", UUID.randomUUID(), ResourceType.COMMENT, false);
+    Notification updatedNotification1 = Notification.create(mock(User.class), "알림메시지1", UUID.randomUUID(), ResourceType.COMMENT);
+    Notification updatedNotification2 = Notification.create(mock(User.class), "알림메시지2", UUID.randomUUID(), ResourceType.COMMENT);
 
     given(notificationService.updateAll(userId)).willReturn(List.of(updatedNotification1, updatedNotification2));
 
@@ -138,7 +138,7 @@ public class NotificationControllerTest {
     UUID userId = UUID.randomUUID();
     UUID notificationId = UUID.randomUUID();
 
-    Notification updatedNotification = Notification.create(mock(User.class), "알림메시지", UUID.randomUUID(), ResourceType.COMMENT, false);
+    Notification updatedNotification = Notification.create(mock(User.class), "알림메시지", UUID.randomUUID(), ResourceType.COMMENT);
 
     given(notificationService.update(notificationId, userId)).willReturn(updatedNotification);
 
