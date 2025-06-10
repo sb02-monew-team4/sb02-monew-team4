@@ -140,13 +140,13 @@ public class CommentServiceTest {
   @Test
   @DisplayName("댓글 목록 조회 - createdAt")
   void testFindCommentsByCreatedAtAsc_FirstPage() {
-
     UUID articleId = UUID.randomUUID();
     String orderBy = "createdAt";
     String direction = "ASC";
     String cursor = null;
     String after = null;
     int limit = 3;
+    UUID requesterId = UUID.randomUUID();
 
     User mockUser = mock(User.class);
     when(mockUser.getId()).thenReturn(UUID.randomUUID());
@@ -154,17 +154,9 @@ public class CommentServiceTest {
 
     Article mockNews = mock(Article.class);
 
-    Comment comment1 = new Comment(mockUser, mockNews, "댓글1");
-    comment1.setId(UUID.randomUUID());
-    comment1.setCreatedAt(Instant.parse("2025-05-01T10:00:00Z"));
-
-    Comment comment2 = new Comment(mockUser, mockNews, "댓글2");
-    comment2.setId(UUID.randomUUID());
-    comment2.setCreatedAt(Instant.parse("2025-05-01T10:05:00Z"));
-
-    Comment comment3 = new Comment(mockUser, mockNews, "댓글3");
-    comment3.setId(UUID.randomUUID());
-    comment3.setCreatedAt(Instant.parse("2025-05-01T10:10:00Z"));
+    Comment comment1 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockNews, "댓글1", Instant.parse("2025-05-01T10:00:00Z"));
+    Comment comment2 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockNews, "댓글2", Instant.parse("2025-05-01T10:05:00Z"));
+    Comment comment3 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockNews, "댓글3", Instant.parse("2025-05-01T10:10:00Z"));
 
     List<Comment> mockComments = List.of(comment1, comment2, comment3);
 
@@ -173,7 +165,7 @@ public class CommentServiceTest {
 
     when(commentRepository.countByNewsId(articleId)).thenReturn(10L);
 
-    when(commentMapper.toDto(any(Comment.class)))
+    when(commentMapper.toDto(any(Comment.class), any(UUID.class)))
         .thenAnswer(invocation -> {
           Comment c = invocation.getArgument(0);
           return new CommentDto(
@@ -188,8 +180,9 @@ public class CommentServiceTest {
           );
         });
 
-    CursorPageResponseCommentDto result = basicCommentService.findCommentsByArticleWithCursorPaging(
-        articleId, orderBy, direction, cursor, after, limit);
+    CursorPageResponseCommentDto result = basicCommentService.getCommentsByArticleWithCursor(
+        articleId, orderBy, direction, cursor, after, limit, requesterId
+    );
 
     assertEquals(3, result.content().size());
     assertEquals(comment3.getId().toString(), result.nextCursor());
@@ -207,43 +200,33 @@ public class CommentServiceTest {
     String cursor = null;
     String after = null;
     int limit = 3;
+    UUID requesterId = UUID.randomUUID();
 
     User mockUser = mock(User.class);
     when(mockUser.getId()).thenReturn(UUID.randomUUID());
     when(mockUser.getNickname()).thenReturn("user1");
 
     Article mockNews = mock(Article.class);
-    when(mockNews.getId()).thenReturn(UUID.randomUUID());
+    UUID articleId = UUID.randomUUID();
+    when(mockNews.getId()).thenReturn(articleId);
 
-    Comment comment1 = new Comment(mockUser, mockNews, "좋아요 많은 댓글");
-    comment1.setId(UUID.randomUUID());
-    comment1.setLikeCount(10L);
-    comment1.setCreatedAt(Instant.parse("2025-05-01T10:00:00Z"));
-
-    Comment comment2 = new Comment(mockUser, mockNews, "중간 댓글");
-    comment2.setId(UUID.randomUUID());
-    comment2.setLikeCount(5L);
-    comment2.setCreatedAt(Instant.parse("2025-05-01T10:05:00Z"));
-
-    Comment comment3 = new Comment(mockUser, mockNews, "좋아요 적은 댓글");
-    comment3.setId(UUID.randomUUID());
-    comment3.setLikeCount(1L);
-    comment3.setCreatedAt(Instant.parse("2025-05-01T10:10:00Z"));
+    Comment comment1 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockNews, "좋아요 많은 댓글", 10L, Instant.parse("2025-05-01T10:00:00Z"));
+    Comment comment2 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockNews, "중간 댓글", 5L, Instant.parse("2025-05-01T10:05:00Z"));
+    Comment comment3 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockNews, "좋아요 적은 댓글", 1L, Instant.parse("2025-05-01T10:10:00Z"));
 
     List<Comment> mockComments = List.of(comment1, comment2, comment3);
 
-    when(commentRepository.findCommentsByArticleWithCursorPaging(any(), eq(orderBy), eq(direction), eq(cursor), eq(after), eq(limit)))
+    when(commentRepository.findCommentsByArticleWithCursorPaging(eq(articleId), eq(orderBy), eq(direction), eq(cursor), eq(after), eq(limit)))
         .thenReturn(mockComments);
 
-    when(commentRepository.countByNewsId(any()))
-        .thenReturn(20L);
+    when(commentRepository.countByNewsId(articleId)).thenReturn(20L);
 
-    when(commentMapper.toDto(any(Comment.class)))
+    when(commentMapper.toDto(any(Comment.class), eq(requesterId)))
         .thenAnswer(invocation -> {
           Comment c = invocation.getArgument(0);
           return new CommentDto(
               c.getId(),
-              mockNews.getId(),
+              articleId,
               c.getUser().getId(),
               c.getUser().getNickname(),
               c.getContent(),
@@ -254,7 +237,7 @@ public class CommentServiceTest {
         });
 
     CursorPageResponseCommentDto actualResponse =
-        basicCommentService.findCommentsByArticleWithCursorPaging(mockNews.getId(), orderBy, direction, cursor, after, limit);
+        basicCommentService.getCommentsByArticleWithCursor(articleId, orderBy, direction, cursor, after, limit, requesterId);
 
     assertEquals(3, actualResponse.content().size());
     assertEquals(comment3.getId().toString(), actualResponse.nextCursor());
@@ -262,7 +245,6 @@ public class CommentServiceTest {
     assertEquals(20L, actualResponse.totalElement());
     assertTrue(actualResponse.hasNext());
   }
-
   @Test
   @DisplayName("댓글 목록 조회 실패 - 결과 없음")
   void testFindCommentsByLikeCount_EmptyResult() {
@@ -271,21 +253,24 @@ public class CommentServiceTest {
     String cursor = null;
     String after = null;
     int limit = 3;
+    UUID articleId = UUID.randomUUID();
+    UUID requesterId = UUID.randomUUID();
 
-    when(commentRepository.findCommentsByArticleWithCursorPaging(any(), eq(orderBy), eq(direction), eq(cursor), eq(after), eq(limit)))
+    when(commentRepository.findCommentsByArticleWithCursorPaging(
+        eq(articleId), eq(orderBy), eq(direction), eq(cursor), eq(after), eq(limit)))
         .thenReturn(List.of());
 
-    when(commentRepository.countByNewsId(any()))
-        .thenReturn(0L);
+    when(commentRepository.countByNewsId(articleId)).thenReturn(0L);
 
     CursorPageResponseCommentDto actualResponse =
-        basicCommentService.findCommentsByArticleWithCursorPaging(UUID.randomUUID(), orderBy, direction, cursor, after, limit);
+        basicCommentService.getCommentsByArticleWithCursor(articleId, orderBy, direction, cursor, after, limit, requesterId);
 
     assertTrue(actualResponse.content().isEmpty());
     assertEquals(0, actualResponse.size());
     assertEquals(0L, actualResponse.totalElement());
     assertFalse(actualResponse.hasNext());
   }
+
 
   @Test
   @DisplayName("댓글 좋아요 성공")
@@ -300,7 +285,7 @@ public class CommentServiceTest {
 
     Comment comment = new Comment();
     ReflectionTestUtils.setField(comment, "id", commentId);
-    comment.setLikeCount(0L);
+    ReflectionTestUtils.setField(comment, "likeCount", 0L);
     ReflectionTestUtils.setField(comment, "user", user);
     ReflectionTestUtils.setField(comment, "news", new Article());
 
