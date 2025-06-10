@@ -27,6 +27,8 @@ public enum ErrorCode {
   COMMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "댓글에 대한 권한이 없습니다."),
   COMMENT_LIKE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "좋아요를 누르지 않은 상태입니다."),
   COMMENT_ALREADY_LIKED(HttpStatus.BAD_REQUEST, "이미 좋아요를 눌렀습니다."),
+  COMMENT_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "삭제된 댓글은 수정할 수 없습니다."),
+
   INVALID_ORDER_BY(HttpStatus.BAD_REQUEST, "orderBy 값은 'likeCount' 또는 'createdAt'만 가능합니다."),
   INVALID_CURSOR_FORMAT(HttpStatus.BAD_REQUEST, "cursor 값이 잘못되었습니다."),
   INVALID_AFTER_FORMAT(HttpStatus.BAD_REQUEST, "after 값이 잘못되었습니다."),
