@@ -16,19 +16,4 @@ public record CommentLikeDto(
     int commentLikeCount,
     Instant commentCreatedAt
 ) {
-    public static CommentLikeDto from(CommentLike like) {
-    var comment = like.getComment();
-    return new CommentLikeDto(
-        like.getId(),
-        like.getUser().getId(),
-        like.getCreatedAt(),
-        comment.getId(),
-        comment.getArticle().getId(),
-        comment.getUser().getId(),
-        comment.getUser().getNickname(),
-        comment.getContent(),
-        comment.getLikeCount().intValue(),
-        comment.getCreatedAt()
-    );
-  }
 }

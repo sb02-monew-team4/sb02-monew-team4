@@ -14,16 +14,4 @@ public record CommentDto(
     boolean likeByMe,
     Instant createdAt
 ) {
-  public static CommentDto from(Comment comment) {
-    return new CommentDto(
-        comment.getId(),
-        comment.getArticle().getId(),
-        comment.getUser().getId(),
-        comment.getUser().getNickname(),
-        comment.getContent(),
-        comment.getLikeCount().intValue(),
-        false,
-        comment.getCreatedAt()
-    );
-  }
 }
