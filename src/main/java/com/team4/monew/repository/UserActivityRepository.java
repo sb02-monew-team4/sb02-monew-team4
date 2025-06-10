@@ -7,5 +7,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface UserActivityRepository extends MongoRepository<UserActivity, String> {
 
-  Optional<UserActivity> findByUser_UserId(UUID userId);
+  Optional<UserActivity> findByUser_Id(UUID userId);
 }

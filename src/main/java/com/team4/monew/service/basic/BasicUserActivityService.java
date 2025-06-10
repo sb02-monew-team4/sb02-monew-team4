@@ -169,7 +169,7 @@ public class BasicUserActivityService implements UserActivityService {
   }
 
   private UserActivity getUserActivityOrThrow(UUID userId) {
-    return userActivityRepository.findByUser_UserId(userId)
+    return userActivityRepository.findByUser_Id(userId)
         .orElseThrow(() -> UserActivityNotFoundException.byUserId(userId));
   }
 }
