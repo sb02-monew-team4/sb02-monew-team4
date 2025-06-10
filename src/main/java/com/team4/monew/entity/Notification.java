@@ -62,13 +62,12 @@ public class Notification {
   private Instant updatedAt;
 
   public static Notification create(User user, String content, UUID resourceId,
-      ResourceType resourceType, boolean confirmed) {
+      ResourceType resourceType) {
     return Notification.builder()
         .user(user)
         .content(content)
         .resourceId(resourceId)
         .resourceType(resourceType)
-        .confirmed(confirmed)
         .build();
   }
 
