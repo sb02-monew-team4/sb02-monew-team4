@@ -50,8 +50,7 @@ public class UserActivityServiceTest {
         "test",
         "test",
         false,
-        Instant.now(),
-        List.of()
+        Instant.now()
     );
 
     UserDto userDto = new UserDto(
