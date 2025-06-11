@@ -57,7 +57,7 @@ public class AuthControllerTest {
     given(authService.login(request)).willReturn(userDto);
 
     // when & then
-    mockMvc.perform(post("/api/users")
+    mockMvc.perform(post("/api/users/login")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isOk())
@@ -78,7 +78,7 @@ public class AuthControllerTest {
         .given(authService).login(invalidRequest);
 
     // when & then
-    mockMvc.perform(post("/api/users")
+    mockMvc.perform(post("/api/users/login")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(invalidRequest)))
         .andExpect(status().isUnauthorized())
