@@ -1,4 +1,4 @@
-package com.team4.monew.config;
+package com.team4.monew.scheduler;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import com.team4.monew.entity.Article;
 import com.team4.monew.repository.ArticleRepository;
-import com.team4.monew.scheduler.ArticleScheduler;
 import com.team4.monew.service.collector.NaverApiCollectorService;
 import com.team4.monew.service.collector.RssCollectorService;
 import com.team4.monew.service.filter.KeywordFilterService;
