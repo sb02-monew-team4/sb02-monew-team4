@@ -1,8 +1,6 @@
 package com.team4.monew.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.team4.monew.entity.Article;
@@ -12,10 +10,10 @@ import com.team4.monew.repository.InterestRepository;
 import com.team4.monew.service.filter.KeywordFilterService;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,121 +31,85 @@ public class KeywordFilterServiceTest {
   @InjectMocks
   private KeywordFilterService keywordFilterService;
 
-  private List<Interest> mockInterests;
-  private List<Article> testArticles;
+  private Interest techInterest;
+  private Interest sportsInterest;
+  private Article techArticle;
+  private Article sportsArticle;
+  private Article unrelatedArticle;
 
   @BeforeEach
   void setUp() {
-    setupTestArticles();
-    setupMockInterests();
-  }
 
-  private void setupMockInterests() {
-    Interest techInterest = new Interest(
-        null,
-        "기술",
-        0L,
-        null,
-        null,
-        new ArrayList<>(),
-        new HashSet<>()
-    );
+    techInterest = createInterest("기술", List.of("스프링", "자바", "개발"));
+    sportsInterest = createInterest("스포츠", List.of("축구", "야구"));
 
-    InterestKeyword keyword1 = new InterestKeyword(
-        UUID.randomUUID(),
-        techInterest,
-        "AI"
-    );
-    InterestKeyword keyword2 = new InterestKeyword(
-        UUID.randomUUID(),
-        techInterest,
-        "블록체인"
-    );
-    InterestKeyword keyword3 = new InterestKeyword(
-        UUID.randomUUID(),
-        techInterest,
-        "머신 러닝"
-    );
-
-    techInterest.getKeywords().addAll(Arrays.asList(keyword1, keyword2, keyword3));
-
-    Interest financeInterest = new Interest(
-        null,
-        "금융",
-        0L,
-        null,
-        null,
-        new ArrayList<>(),
-        new HashSet<>()
-    );
-
-    InterestKeyword keyword4 = new InterestKeyword(
-        UUID.randomUUID(),
-        financeInterest,
-        "주식"
-    );
-    InterestKeyword keyword5 = new InterestKeyword(
-        UUID.randomUUID(),
-        financeInterest,
-        "투자"
-    );
-
-    financeInterest.getKeywords().addAll(Arrays.asList(keyword4, keyword5));
-
-    mockInterests = Arrays.asList(techInterest, financeInterest);
-
-    when(interestRepository.findAll()).thenReturn(mockInterests);
-  }
-
-  private void setupTestArticles() {
-    testArticles = Arrays.asList(
-        new Article(
-            "한국경제",
-            "http://example.com/1",
-            "AI 관련 기사",
-            Instant.now(),
-            "인공지능 관련 기사 summary"),
-        new Article(
-            "조선일보",
-            "http://example.com/2",
-            "스포츠 관련 기사",
-            Instant.now(),
-            "AI 관련 기사 summary"),
-        new Article(
-            "연합뉴스",
-            "http://example.com/3",
-            "투자 관련 기사",
-            Instant.now(),
-            "부동산 관련 기사 summary"
-        ),
-        new Article(
-            "한국경제",
-            "http://example.com/4",
-            "날씨 관련 기사",
-            Instant.now(),
-            "일기 예보 관련 기사 summary"
-        ));
+    techArticle = createArticle("스프링 부트 최신 기능 소개",
+        "스프링 부트의 새로운 기능들을 살펴봅니다.");
+    sportsArticle = createArticle("월드컵 축구 경기 결과",
+        "월드컵 축구 경기 결과는 ... ");
+    unrelatedArticle = createArticle("일기 예보",
+        "오늘 하늘은 맑을 예정입니다.");
   }
 
   @Test
-  @DisplayName("제목, 요약에 키워드가 포함된 기사 필터링")
-  void shouldFilterArticlesWithKeywordsInTitle() {
-    // Given
-    when(interestRepository.findAll()).thenReturn(mockInterests);
+  @DisplayName("키워드가 포함된 기사만 필터링되어야 한다.")
+  void shouldFilterArticleContainingKeywords() {
+    // given
+    when(interestRepository.findAllWithKeywords())
+        .thenReturn(List.of(techInterest, sportsInterest));
 
-    // When
-    List<Article> filteredArticles = keywordFilterService.filterArticles(testArticles);
+    List<Article> inputArticles = List.of(techArticle, sportsArticle, unrelatedArticle);
 
-    // Then
-    assertThat(filteredArticles)
-        .hasSize(3) // 필터링 된 기사 3개
-        .extracting(Article::getTitle)
-        .containsExactlyInAnyOrder(
-            "AI 관련 기사", // title에 포함
-            "스포츠 관련 기사", // summary에 포함
-            "투자 관련 기사" // title에 포함
-        );
+    // when
+    List<Article> filteredArticles = keywordFilterService.filterArticles(inputArticles);
 
-    verify(interestRepository, times(1)).findAll();
+    // then
+    assertThat(filteredArticles).hasSize(2);
+    assertThat(filteredArticles).contains(techArticle, sportsArticle);
+    assertThat(filteredArticles).doesNotContain(unrelatedArticle);
+  }
+
+  @Test
+  @DisplayName("여러 관심사의 키워드에 매칭되는 기사는 모든 관심사와 연결되어야 한다.")
+  void shouldAttachMultipleInterestsToArticle() {
+    //  given
+    Article mixedArticle = createArticle("스프링으로 축구 게임 개발",
+        "스프링 프레임워크로 축구 게임을 만드는 방법은 ...");
+
+    when(interestRepository.findAllWithKeywords())
+        .thenReturn(List.of(techInterest, sportsInterest));
+
+    // when
+    List<Article> filteredArticles = keywordFilterService.filterArticles(List.of(mixedArticle));
+
+    // then
+    Article filteredArticle = filteredArticles.get(0);
+    assertThat(filteredArticle.getInterest()).hasSize(2);
+    assertThat(filteredArticle.getInterest()).contains(techInterest, sportsInterest);
+  }
+
+  private Interest createInterest(String name, List<String> keywords) {
+    Interest interest = new Interest(
+        UUID.randomUUID(), name, 0L, Instant.now(), Instant.now(),
+        new ArrayList<>(), new HashSet<>()
+    );
+
+    List<InterestKeyword> keywordEntities = keywords.stream()
+        .map(keyword -> new InterestKeyword(UUID.randomUUID(), interest, keyword))
+        .collect(Collectors.toList());
+
+    interest.getKeywords().addAll(keywordEntities);
+
+    return interest;
+  }
+
+  private Article createArticle(String title, String summary) {
+    return new Article(
+        "TEST_SOURCE",
+        "http://test.com/" + UUID.randomUUID(),
+        title,
+        Instant.now(),
+        summary
+    );
   }
 }

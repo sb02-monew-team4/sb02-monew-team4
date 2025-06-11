@@ -2,30 +2,19 @@ package com.team4.monew.mapper;
 
 import com.team4.monew.dto.article.ArticleViewDto;
 import com.team4.monew.entity.ArticleView;
-import com.team4.monew.repository.CommentRepository;
 import org.mapstruct.Mapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
-public abstract class ArticleViewMapper {
+public interface ArticleViewMapper {
 
-  @Autowired
-  private CommentRepository commentRepository;
-
-  public ArticleViewDto toDto(ArticleView articleView) {
-    long commentCount = commentRepository.countByNewsId(articleView.getArticle().getId());
-
-    return new ArticleViewDto(
-        articleView.getId(),
-        articleView.getUser().getId(),
-        articleView.getViewedAt(),
-        articleView.getArticle().getId(),
-        articleView.getArticle().getSource(),
-        articleView.getArticle().getOriginalLink(),
-        articleView.getArticle().getPublishedDate(),
-        articleView.getArticle().getSummary(),
-        commentCount,
-        articleView.getArticle().getViewCount()
-    );
-  }
+  @Mapping(target = "userId", source = "user.id")
+  @Mapping(target = "articleId", source = "article.id")
+  @Mapping(target = "source", source = "article.source")
+  @Mapping(target = "originalLink", source = "article.originalLink")
+  @Mapping(target = "publishedDate", source = "article.publishedDate")
+  @Mapping(target = "summary", source = "article.summary")
+  @Mapping(target = "commentCount", source = "article.commentCount")
+  @Mapping(target = "viewCount", source = "article.viewCount")
+  public ArticleViewDto toDto(ArticleView articleView);
 }
