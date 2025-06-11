@@ -1,5 +1,7 @@
 package com.team4.monew.entity;
 
+import com.team4.monew.exception.ErrorCode;
+import com.team4.monew.exception.MonewException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -32,8 +34,8 @@ public class Comment {
   private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "news_id", nullable = false)
-  private News news;
+  @JoinColumn(name = "article_id", nullable = false)
+  private Article article;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
@@ -44,11 +46,11 @@ public class Comment {
 
   @CreatedDate
   @Column(name = "created_at", updatable = false, nullable = false)
-  private Instant createAt;
+  private Instant createdAt;
 
   @LastModifiedDate
   @Column(name = "updated_at", nullable = false)
-  private Instant updateAt;
+  private Instant updatedAt;
 
   @Column(name = "is_deleted")
   private Boolean isDeleted = false;
@@ -56,4 +58,47 @@ public class Comment {
   @Column(name = "like_count")
   private Long likeCount = 0L;
 
+  public Comment(User user, Article article, String content) {
+    this.user = user;
+    this.article = article;
+    this.content = content;
+  }
+
+  private Comment(UUID id, User user, Article article, String content, Long likeCount, Instant createdAt) {
+    this.id = id;
+    this.user = user;
+    this.article = article;
+    this.content = content;
+    this.likeCount = likeCount != null ? likeCount : 0L;
+    this.createdAt = createdAt;
+  }
+
+  public static Comment createWithLikeCount(UUID id, User user, Article article, String content, Long likeCount, Instant createdAt) {
+    return new Comment(id, user, article, content, likeCount, createdAt);
+  }
+
+  public static Comment createWithCreatedAt(UUID id, User user, Article article, String content, Instant createdAt) {
+    return new Comment(id, user, article, content, 0L, createdAt);
+  }
+
+  public void updateContent(String content) {
+    if (this.isDeleted) {
+      throw new MonewException(ErrorCode.COMMENT_ALREADY_DELETED);
+    }
+    this.content = content;
+  }
+
+  public void markDeleted() {
+    this.isDeleted = true;
+  }
+
+  public void increaseLikeCount() {
+    this.likeCount++;
+  }
+
+  public void decreaseLikeCount() {
+    if (this.likeCount > 0) {
+      this.likeCount--;
+    }
+  }
 }

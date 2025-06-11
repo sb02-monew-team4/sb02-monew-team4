@@ -1,5 +1,6 @@
 package com.team4.monew.dto.comment;
 
+import com.team4.monew.entity.CommentLike;
 import java.time.Instant;
 import java.util.UUID;
 
