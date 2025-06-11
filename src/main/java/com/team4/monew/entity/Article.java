@@ -11,6 +11,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -50,6 +51,9 @@ public class Article {
   @Column(name = "view_count", nullable = false)
   private Long viewCount = 0L;
 
+  @Column(nullable = false)
+  private Long commentCount = 0L;
+
   @Column(name = "is_deleted", nullable = false)
   private Boolean isDeleted = false;
 
@@ -72,5 +76,35 @@ public class Article {
     this.title = title;
     this.publishedDate = publishedDate;
     this.summary = summary;
+  }
+
+  public void addInterest(Interest interest) {
+    this.interest.add(interest);
+    interest.getArticles().add(this);
+  }
+
+  public void removeInterest(Interest interest) {
+    this.interest.remove(interest);
+    interest.getArticles().remove(this);
+  }
+
+  public Set<Interest> getInterest() {
+    return Collections.unmodifiableSet(interest);
+  }
+
+  public void incrementCommentCount() {
+    this.commentCount++;
+  }
+
+  public void decrementCommentCount() {
+    this.commentCount--;
+  }
+
+  public void incrementViewCount() {
+    this.viewCount++;
+  }
+
+  public void decrementViewCount() {
+    this.viewCount--;
   }
 }
