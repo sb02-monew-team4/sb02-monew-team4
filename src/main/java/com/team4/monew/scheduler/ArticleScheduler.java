@@ -1,4 +1,4 @@
-package com.team4.monew.config;
+package com.team4.monew.scheduler;
 
 import com.team4.monew.entity.Article;
 import com.team4.monew.repository.ArticleRepository;
@@ -6,16 +6,16 @@ import com.team4.monew.service.collector.NaverApiCollectorService;
 import com.team4.monew.service.collector.RssCollectorService;
 import com.team4.monew.service.filter.KeywordFilterService;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-@Configuration
-@EnableScheduling
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public class ArticleScheduler {
 
   @Autowired
@@ -27,7 +27,7 @@ public class ArticleScheduler {
   @Autowired
   private ArticleRepository repository;
 
-  @Scheduled(cron = "0 0 * * * *")
+  @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
   @Transactional
   public void hourlyArticleProcessing() {
     log.info("정시 기사 수집 시작");
