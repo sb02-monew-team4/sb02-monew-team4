@@ -27,7 +27,7 @@ public class ArticleScheduler {
   @Autowired
   private ArticleRepository repository;
 
-  @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
+  @Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul")
   @Transactional
   public void hourlyArticleProcessing() {
     log.info("정시 기사 수집 시작");
