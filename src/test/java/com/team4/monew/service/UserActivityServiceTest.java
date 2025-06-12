@@ -20,19 +20,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @ExtendWith(MockitoExtension.class)
 public class UserActivityServiceTest {
 
-  @MockitoBean
+  @Mock
   private UserActivityMapper userActivityMapper;
 
-  @MockitoBean
+  @Mock
   private UserMapper userMapper;
 
-  @MockitoBean
+  @Mock
   private UserActivityRepository userActivityRepository;
 
   @InjectMocks
@@ -74,8 +74,8 @@ public class UserActivityServiceTest {
     );
 
     given(userActivityRepository.save(any(UserActivity.class))).willReturn(userActivity);
-    given(userActivityMapper.toDto(userActivity)).willReturn(userActivityDto);
-    given(userMapper.toDto(user)).willReturn(userDto);
+    given(userActivityMapper.toDto(any(UserActivity.class))).willReturn(userActivityDto);
+    given(userMapper.toDto(any(User.class))).willReturn(userDto);
 
     // when
     UserActivityDto result = userActivityService.create(user);
