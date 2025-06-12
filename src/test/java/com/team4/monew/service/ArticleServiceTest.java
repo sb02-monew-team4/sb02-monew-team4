@@ -13,13 +13,13 @@ import com.team4.monew.entity.Article;
 import com.team4.monew.entity.ArticleView;
 import com.team4.monew.entity.User;
 import com.team4.monew.exception.article.ArticleNotFoundException;
+import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.mapper.ArticleViewMapper;
 import com.team4.monew.repository.ArticleRepository;
 import com.team4.monew.repository.ArticleViewRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicArticleService;
 import java.time.Instant;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -42,7 +42,7 @@ public class ArticleServiceTest {
   private ArticleViewMapper articleViewMapper;
 
   @InjectMocks
-  private BasicArticleService basicNewsService;
+  private BasicArticleService basicArticleService;
 
   @Test
   @DisplayName("기사 뷰 등록 성공")
@@ -74,7 +74,7 @@ public class ArticleServiceTest {
     when(articleViewMapper.toDto(articleView)).thenReturn(expectedDto);
 
     // When
-    ArticleViewDto result = basicNewsService.registerNewsView(newsId, userId);
+    ArticleViewDto result = basicArticleService.registerArticleView(newsId, userId);
 
     // Then
     assertNotNull(result);
@@ -86,21 +86,21 @@ public class ArticleServiceTest {
   }
 
   @Test
-  void registerNewsView_NewsNotFoundException() {
+  void registerNewsView_ArticleNotFoundException() {
     UUID newsId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
 
     when(articleRepository.findById(newsId)).thenReturn(Optional.empty());
 
     assertThrows(ArticleNotFoundException.class, () ->
-        basicNewsService.registerNewsView(newsId, userId)
+        basicArticleService.registerArticleView(newsId, userId)
     );
     verify(articleRepository).findById(newsId);
     verifyNoInteractions(userRepository, articleViewRepository, articleViewMapper);
   }
 
   @Test
-  void registerNewsView_UserNotFoundException() {
+  void registerArticleView_UserNotFoundException() {
     UUID newsId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
     Article article = new Article();
@@ -108,8 +108,8 @@ public class ArticleServiceTest {
     when(articleRepository.findById(newsId)).thenReturn(Optional.of(article));
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-    assertThrows(NoSuchElementException.class, () -> // UserNotFoundException.class 로 변경해야함
-        basicNewsService.registerNewsView(newsId, userId)
+    assertThrows(UserNotFoundException.class, () -> // UserNotFoundException.class 로 변경해야함
+        basicArticleService.registerArticleView(newsId, userId)
     );
     verify(articleRepository).findById(newsId);
     verify(userRepository).findById(userId);

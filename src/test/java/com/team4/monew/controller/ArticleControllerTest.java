@@ -62,7 +62,7 @@ public class ArticleControllerTest {
         12L,
         100L
     );
-    BDDMockito.given(articleService.registerNewsView(newsId, userId))
+    BDDMockito.given(articleService.registerArticleView(newsId, userId))
         .willReturn(responseDto);
 
     // when & then

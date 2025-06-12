@@ -6,7 +6,6 @@ import com.team4.monew.repository.InterestRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +17,6 @@ import org.springframework.stereotype.Service;
 public class KeywordFilterService {
 
   private final InterestRepository interestRepository;
-
-  private final Set<String> KEYWORDS = ConcurrentHashMap.newKeySet();
 
   public List<Article> filterArticles(List<Article> articles) {
     // 키워드 별 Interest 매핑 생성 (N+1 문제 해결)

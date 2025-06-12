@@ -52,7 +52,8 @@ class CommentControllerTest {
         Instant.now()
     );
 
-    Mockito.when(commentService.register(any())).thenReturn(response);
+    Mockito.when(commentService.register(any(UUID.class), any(CommentRegisterRequest.class)))
+        .thenReturn(response);
 
     mockMvc.perform(post("/api/comments")
             .contentType(MediaType.APPLICATION_JSON)

@@ -44,7 +44,12 @@ public class BasicCommentService implements CommentService {
 
   @Transactional
   @Override
-  public CommentDto register(CommentRegisterRequest request) {
+  public CommentDto register(UUID authenticatedUserId, CommentRegisterRequest request) {
+
+    if (!authenticatedUserId.equals(request.userId())) {
+      throw new MonewException(ErrorCode.UNAUTHORIZED_ACCESS);
+    }
+
     User user = userRepository.findById(request.userId())
         .orElseThrow(() -> new MonewException(ErrorCode.USER_NOT_FOUND));
 
@@ -53,7 +58,8 @@ public class BasicCommentService implements CommentService {
 
     Comment comment = new Comment(user, article, request.content());
     Comment saved = commentRepository.save(comment);
-    //increment
+
+    article.incrementCommentCount();
 
     return commentMapper.toDto(saved, request.userId());
   }
@@ -166,12 +172,13 @@ public class BasicCommentService implements CommentService {
       throw new MonewException(ErrorCode.COMMENT_FORBIDDEN);
     }
 
-    //decrement
+    comment.getArticle().decrementCommentCount();
 
     comment.markDeleted();
     commentRepository.save(comment);
   }
 
+  @Transactional
   @Override
   public void hardDelete(UUID commentId, UUID userId) {
     Comment comment = commentRepository.findById(commentId)
