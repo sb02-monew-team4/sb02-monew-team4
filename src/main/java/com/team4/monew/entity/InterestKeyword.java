@@ -31,4 +31,9 @@ public class InterestKeyword {
 
   @Column(nullable = false, length = 100)
   private String keyword;
+
+  public InterestKeyword(Interest interest, String keyword) {
+    this.interest = interest;
+    this.keyword = keyword;
+  }
 }
