@@ -28,8 +28,42 @@ public class BasicNotificationService implements NotificationService {
 
   private final NotificationRepository notificationRepository;
   private final NotificationMapper notificationMapper;
+  private final UserRepository userRepository;
 
   @Override
+  public Notification createForCommentLike(UUID commentId, UUID likerId, UUID commentOwnerId) {
+    // 알림을 받을 사람 (댓글 작성자)
+    User owner = userRepository.findById(commentOwnerId)
+        .orElseThrow(() -> UserNotFoundException.byId(commentOwnerId));
+
+    // 좋아요를 누른 사람
+    User liker = userRepository.findById(likerId)
+        .orElseThrow(() -> UserNotFoundException.byId(likerId));
+
+    String content = liker.getNickname() + "님이 나의 댓글을 좋아합니다.";
+
+    return createAndSaveNotification(owner, content, commentId, ResourceType.COMMENT);
+  }
+
+  @Override
+  public Notification createForNewArticles(UUID interestId, String interestName, int articleCount,
+      UUID subscriberId) {
+    // 알림을 받을 사람 (관심사 구독자)
+    User owner = userRepository.findById(subscriberId)
+        .orElseThrow(() -> UserNotFoundException.byId(subscriberId));
+
+    String content = interestName + "와(과) 관련된 새로운 기사가 " + articleCount + "건 등록되었습니다.";
+
+    return createAndSaveNotification(owner, content, interestId, ResourceType.INTEREST);
+  }
+
+  private Notification createAndSaveNotification(User owner, String content, UUID resourceId, ResourceType resourceType) {
+    Notification notification = Notification.create(owner, content, resourceId, resourceType);
+    return notificationRepository.save(notification);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public CursorPageResponseNotificationDto findUnconfirmedByCursor(
       String cursor,
       Instant after,
@@ -67,20 +101,6 @@ public class BasicNotificationService implements NotificationService {
         hasNext
     );
   }
-
-//  @Override
-//  public Notification create(String keyword, int registerCnt, ResourceType resourceType, UUID resourceId, UUID userId) {
-//    String content = null;
-//    if(resourceType == ResourceType.INTEREST){
-//      content = keyword + "와 관련된 기사가 " + registerCnt + "건 등록되었습니다.";
-//    }else if(resourceType == ResourceType.COMMENT){
-//      content = keyword + "님이 나의 댓글을 좋아합니다.";
-//    }
-//    User user = userRepository.findById(userId)
-//        .orElseThrow(() -> UserNotFoundException.byId(userId));
-//    Notification notification = Notification.create(user, content, resourceId, resourceType);
-//    return notificationRepository.save(notification);
-//  }
 
   @Override
   public List<Notification> updateAll(UUID userId) {
