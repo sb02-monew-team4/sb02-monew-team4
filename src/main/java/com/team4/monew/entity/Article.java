@@ -80,12 +80,12 @@ public class Article {
 
   public void addInterest(Interest interest) {
     this.interest.add(interest);
-    interest.getArticles().add(this);
+    interest.getArticle().add(this);
   }
 
   public void removeInterest(Interest interest) {
     this.interest.remove(interest);
-    interest.getArticles().remove(this);
+    interest.getArticle().remove(this);
   }
 
   public Set<Interest> getInterest() {
