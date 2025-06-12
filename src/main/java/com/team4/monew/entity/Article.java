@@ -107,4 +107,10 @@ public class Article {
   public void decrementViewCount() {
     this.viewCount--;
   }
+
+  public void updateIsDeleted() {
+    if (!isDeleted) {
+      this.isDeleted = true;
+    }
+  }
 }
