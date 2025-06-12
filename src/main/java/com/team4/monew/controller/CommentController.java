@@ -4,6 +4,7 @@ import com.team4.monew.dto.comment.*;
 import com.team4.monew.exception.ErrorCode;
 import com.team4.monew.exception.MonewException;
 import com.team4.monew.service.basic.BasicCommentService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +21,12 @@ public class CommentController {
 
   @PostMapping
   public ResponseEntity<CommentDto> register(
-      @Valid @RequestBody CommentRegisterRequest request
+      @Valid @RequestBody CommentRegisterRequest request,
+    HttpServletRequest servletRequest
   ) {
-    CommentDto response = commentService.register(request);
+    UUID authenticatedUserId = (UUID) servletRequest.getAttribute("authenticatedUserId");
+
+    CommentDto response = commentService.register(authenticatedUserId, request);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
