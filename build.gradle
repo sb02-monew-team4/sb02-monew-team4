@@ -65,9 +65,6 @@ dependencies {
 
     // RSS 피드 읽기 위한 rome 라이브러리
     implementation 'com.rometools:rome:2.1.0'
-
-    // env 파일의 CLIENT_ID, CLIENT_SECRET 읽어오기 위한 라이브러리
-    implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 }
 
 tasks.named('test') {
