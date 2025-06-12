@@ -8,7 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CommentRepository extends JpaRepository<Comment, UUID>, CommentRepositoryCustom {
+
   Page<Comment> findByUserIdAndIsDeletedFalse(UUID userId, Pageable pageable);
+
   List<Comment> findCommentsByArticleWithCursorPaging(
       UUID articleId,
       String orderBy,
@@ -19,4 +21,6 @@ public interface CommentRepository extends JpaRepository<Comment, UUID>, Comment
   );
 
   long countByArticleId(UUID articleId);
+
+  List<Comment> findTop10ByUserIdOrderByCreatedAtDesc(UUID userId);
 }

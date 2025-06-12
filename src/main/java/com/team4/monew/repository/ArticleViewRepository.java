@@ -17,4 +17,6 @@ public interface ArticleViewRepository extends JpaRepository<ArticleView, UUID> 
   Set<UUID> findViewedArticleIdsByUserIdAndArticleIds(
       @Param("userId") UUID userid,
       @Param("articleIds") List<UUID> articleIds);
+
+  List<ArticleView> findTop10ByUserIdOrderByViewedAtDesc(UUID userId);
 }

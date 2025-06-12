@@ -12,6 +12,7 @@ import com.team4.monew.entity.CommentLike;
 import com.team4.monew.entity.Subscription;
 import com.team4.monew.entity.User;
 import com.team4.monew.entity.UserActivity;
+import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.exception.userActivity.UserActivityNotFoundException;
 import com.team4.monew.mapper.ArticleViewMapper;
 import com.team4.monew.mapper.CommentActivityMapper;
@@ -19,7 +20,12 @@ import com.team4.monew.mapper.CommentLikeActivityMapper;
 import com.team4.monew.mapper.SubscriptionMapper;
 import com.team4.monew.mapper.UserActivityMapper;
 import com.team4.monew.mapper.UserMapper;
+import com.team4.monew.repository.ArticleViewRepository;
+import com.team4.monew.repository.CommentLikeRepository;
+import com.team4.monew.repository.CommentRepository;
+import com.team4.monew.repository.SubscriptionRepository;
 import com.team4.monew.repository.UserActivityRepository;
+import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.UserActivityService;
 import com.team4.monew.util.UserActivityListUtils;
 import java.util.List;
@@ -33,10 +39,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class BasicUserActivityService implements UserActivityService {
 
   private final UserActivityRepository userActivityRepository;
+  private final UserRepository userRepository;
+  private final CommentRepository commentRepository;
+  private final CommentLikeRepository commentLikeRepository;
+  private final ArticleViewRepository articleViewRepository;
+  private final SubscriptionRepository subscriptionRepository;
+
   private final UserActivityMapper userActivityMapper;
+  private final UserMapper userMapper;
   private final CommentActivityMapper commentActivityMapper;
   private final SubscriptionMapper subscriptionMapper;
-  private final UserMapper userMapper;
   private final ArticleViewMapper articleViewMapper;
   private final CommentLikeActivityMapper commentLikeActivityMapper;
 
@@ -166,6 +178,44 @@ public class BasicUserActivityService implements UserActivityService {
       subscriptionDtos.set(idx, dto);
       userActivityRepository.save(userActivity);
     }
+  }
+
+  @Override
+  public void syncUserActivity(UUID userId) {
+    UserDto userDto = userMapper.toDto(userRepository.findById(userId)
+        .orElseThrow(() -> UserNotFoundException.byId(userId)));
+
+    List<CommentActivityDto> recentComments = commentRepository.findTop10ByUserIdOrderByCreatedAtDesc(
+            userId)
+        .stream().map(commentActivityMapper::toDto).toList();
+
+    List<CommentLikeActivityDto> recentLikes = commentLikeRepository.findTop10ByUserIdOrderByCreatedAtDesc(
+            userId)
+        .stream().map(commentLikeActivityMapper::toDto).toList();
+
+    List<ArticleViewDto> recentViews = articleViewRepository.findTop10ByUserIdOrderByViewedAtDesc(
+            userId)
+        .stream().map(articleViewMapper::toDto).toList();
+
+    List<SubscriptionDto> subscriptions = subscriptionRepository.findAllByUserId(userId)
+        .stream().map(subscriptionMapper::toDto).toList();
+
+    UserActivity activity = userActivityRepository.findByUser_Id(userId)
+        .orElse(new UserActivity(userDto));
+
+    activity.getRecentCommentActivityDtos().clear();
+    activity.getRecentCommentActivityDtos().addAll(recentComments);
+
+    activity.getRecentCommentLikeActivityDtos().clear();
+    activity.getRecentCommentLikeActivityDtos().addAll(recentLikes);
+
+    activity.getRecentArticleViewDtos().clear();
+    activity.getRecentArticleViewDtos().addAll(recentViews);
+
+    activity.getSubscriptionDtos().clear();
+    activity.getSubscriptionDtos().addAll(subscriptions);
+
+    userActivityRepository.save(activity);
   }
 
   private UserActivity getUserActivityOrThrow(UUID userId) {
