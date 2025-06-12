@@ -95,17 +95,11 @@ public class CommentServiceTest {
     ReflectionTestUtils.setField(user, "createdAt", Instant.now());
 
     article = new Article(
-        articleId,
         "출처",
         "http://original.link",
         "뉴스 제목",
         Instant.now(),
-        "뉴스 요약",
-        0L,
-        0L,
-        false,
-        Instant.now(),
-        new HashSet<>()
+        "뉴스 요약"
     );
   }
 
@@ -122,7 +116,7 @@ public class CommentServiceTest {
     when(articleRepository.findById(articleId)).thenReturn(Optional.of(article));
     when(commentRepository.save(any(Comment.class))).thenReturn(comment);
 
-    CommentDto result = basicCommentService.register(request);
+    CommentDto result = basicCommentService.register(userId, request);
 
     assertNotNull(result);
     assertEquals(content, result.content());
@@ -138,7 +132,7 @@ public class CommentServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     MonewException exception = assertThrows(MonewException.class, () -> {
-      basicCommentService.register(request);
+      basicCommentService.register(userId, request);
     });
 
     assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
@@ -154,7 +148,7 @@ public class CommentServiceTest {
     when(articleRepository.findById(articleId)).thenReturn(Optional.empty());
 
     assertThrows(IllegalArgumentException.class, () -> {
-      basicCommentService.register(request);
+      basicCommentService.register(userId, request);
     });
   }
 

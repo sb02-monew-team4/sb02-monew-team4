@@ -32,6 +32,18 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
       String after,
       int limit
   ) {
+    if (!"likeCount".equals(orderBy) && !"createdAt".equals(orderBy)) {
+      throw new MonewException(ErrorCode.INVALID_ORDER_BY);
+    }
+
+    if (!"ASC".equalsIgnoreCase(direction) && !"DESC".equalsIgnoreCase(direction)) {
+      throw new MonewException(ErrorCode.INVALID_SORT_DIRECTION);
+    }
+
+    if (limit < 1 || limit > 100) {
+      throw new MonewException(ErrorCode.INVALID_LIMIT);
+    }
+
     QComment comment = QComment.comment;
 
     if (!"likeCount".equals(orderBy) && !"createdAt".equals(orderBy)) {
@@ -42,7 +54,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
 
     var query = queryFactory
         .selectFrom(comment)
-        .where(comment.news.id.eq(articleId), comment.isDeleted.eq(false))
+        .where(comment.article.id.eq(articleId), comment.isDeleted.eq(false))
         .limit(limit);
 
     if ("likeCount".equals(orderBy)) {

@@ -39,5 +39,11 @@ public class Subscription {
   @CreatedDate
   @Column(nullable = false, updatable = false)
   private Instant createdAt;
+
+  public Subscription(UUID id, User user, Interest interest) {
+    this.id = id;
+    this.user = user;
+    this.interest = interest;
+  }
 }
 
