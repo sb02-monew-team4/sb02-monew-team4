@@ -30,7 +30,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Interest {
-
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
@@ -52,6 +51,33 @@ public class Interest {
   @OneToMany(mappedBy = "interest", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<InterestKeyword> keywords = new ArrayList<>();
 
+  @OneToMany(mappedBy = "interest", cascade = CascadeType.REMOVE, orphanRemoval = true)
+  private List<Subscription> subscriptions = new ArrayList<>();
+
   @ManyToMany(mappedBy = "interest")
   private Set<Article> article = new HashSet<>();
+
+  public Interest(String name, List<InterestKeyword> keywords) {
+    this.name = name;
+    this.keywords = keywords;
+    this.subscriberCount = 0L;
+  }
+
+  public void updateKeywords(List<String> newKeywords) {
+    this.keywords.clear();
+
+    for (String keyword : newKeywords) {
+      this.keywords.add(new InterestKeyword(this, keyword));
+    }
+  }
+
+  public void increaseSubscriberCount() {
+    this.subscriberCount += 1;
+  }
+
+  public void decreaseSubscriberCount() {
+    if (subscriberCount > 0) {
+      subscriberCount--;
+    }
+  }
 }
