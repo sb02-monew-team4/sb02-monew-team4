@@ -38,7 +38,8 @@ public class BasicInterestService implements InterestService {
 
   @Transactional
   @Override
-  public InterestDto register(UUID requestUserId, InterestRegisterRequest request) {
+  public InterestDto register(UUID authenticatedUserId, InterestRegisterRequest request) {
+
     String newInterestName = request.name();
 
     List<Interest> existing = interestRepository.findAll();
@@ -54,13 +55,14 @@ public class BasicInterestService implements InterestService {
       throw new MonewException(ErrorCode.KEYWORDS_REQUIRED);
     }
 
-    User user = userRepository.findById(requestUserId)
-        .orElseThrow(() -> new MonewException(ErrorCode.USER_NOT_FOUND));
+    if (!userRepository.existsById(authenticatedUserId)) {
+      throw new MonewException(ErrorCode.USER_NOT_FOUND);
+    }
 
     Interest interest = interestMapper.toEntity(request);
     interestRepository.save(interest);
 
-    return interestMapper.toDto(interest, requestUserId);
+    return interestMapper.toDto(interest, authenticatedUserId);
   }
 
     private boolean isSimilar(String s1, String s2) {
@@ -123,25 +125,24 @@ public class BasicInterestService implements InterestService {
     Interest interest = interestRepository.findById(interestId)
         .orElseThrow(() -> new MonewException(ErrorCode.INTEREST_NOT_FOUND));
 
-    List<String> keywords = request.keywords();
-
-    if (keywords == null || keywords.isEmpty()) {
-      throw new MonewException(ErrorCode.KEYWORDS_REQUIRED);
-    }
-
-    if (keywords.size() > 10) {
-      throw new MonewException(ErrorCode.KEYWORDS_TOO_MANY);
-    }
+    List<String> keywords = Optional.ofNullable(request.keywords())
+        .orElseThrow(() -> new MonewException(ErrorCode.KEYWORDS_REQUIRED));
 
     List<String> distinctKeywords = keywords.stream().distinct().toList();
 
-    for (String keyword : distinctKeywords) {
-      if (keyword.length() > 20) {
-        throw new MonewException(ErrorCode.KEYWORD_TOO_LONG);
-      }
+    if (distinctKeywords.isEmpty()) {
+      throw new MonewException(ErrorCode.KEYWORDS_REQUIRED);
     }
 
-    interest.updateKeywords(request.keywords());
+    if (distinctKeywords.size() > 10) {
+      throw new MonewException(ErrorCode.KEYWORDS_TOO_MANY);
+    }
+
+    if (distinctKeywords.stream().anyMatch(k -> k.length() > 20)) {
+      throw new MonewException(ErrorCode.KEYWORD_TOO_LONG);
+    }
+
+    interest.updateKeywords(distinctKeywords);
 
     return interestMapper.toDto(interest, null);
   }
