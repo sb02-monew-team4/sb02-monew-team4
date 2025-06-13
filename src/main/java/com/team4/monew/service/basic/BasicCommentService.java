@@ -45,13 +45,9 @@ public class BasicCommentService implements CommentService {
 
   @Transactional
   @Override
-  public CommentDto register(UUID authenticatedUserId, CommentRegisterRequest request) {
+  public CommentDto register(UUID userId, CommentRegisterRequest request) {
 
-    if (!authenticatedUserId.equals(request.userId())) {
-      throw new MonewException(ErrorCode.UNAUTHORIZED_ACCESS);
-    }
-
-    User user = userRepository.findById(request.userId())
+    User user = userRepository.findById(userId)
         .orElseThrow(() -> new MonewException(ErrorCode.USER_NOT_FOUND));
 
     Article article = articleRepository.findById(request.articleId())
@@ -62,7 +58,7 @@ public class BasicCommentService implements CommentService {
 
     article.incrementCommentCount();
 
-    return commentMapper.toDto(saved, request.userId());
+    return commentMapper.toDto(saved, userId);
   }
 
   @Override
