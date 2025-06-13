@@ -1,15 +1,19 @@
 package com.team4.monew.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.team4.monew.dto.UserActivity.UserActivityDto;
+import com.team4.monew.interceptor.AuthInterceptor;
+import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicUserActivityService;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +29,17 @@ public class UserActivityControllerTest {
 
   @MockitoBean
   private BasicUserActivityService userActivityService;
+
+  @MockitoBean
+  private UserRepository userRepository;
+
+  @MockitoBean
+  private AuthInterceptor authInterceptor;
+
+  @BeforeEach
+  void setup() throws Exception {
+    given(authInterceptor.preHandle(any(), any(), any())).willReturn(true);
+  }
 
   @DisplayName("활동 내역 조회 성공")
   @Test

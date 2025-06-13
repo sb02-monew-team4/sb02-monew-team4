@@ -34,5 +34,7 @@ public interface UserActivityService {
 
   void updateSubscription(UUID userId, Subscription subscription);
 
+  void syncUserActivity(UUID userId);
+
 
 }
