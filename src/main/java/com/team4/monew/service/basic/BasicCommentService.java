@@ -1,23 +1,22 @@
 package com.team4.monew.service.basic;
 
-import static com.team4.monew.entity.QComment.comment;
-
+import com.team4.monew.asynchronous.event.commentlike.CommentLikeCreatedEventForNotification;
 import com.team4.monew.dto.comment.CommentDto;
 import com.team4.monew.dto.comment.CommentLikeDto;
 import com.team4.monew.dto.comment.CommentRegisterRequest;
 import com.team4.monew.dto.comment.CommentUpdateRequest;
 import com.team4.monew.dto.comment.CursorPageResponseCommentDto;
+import com.team4.monew.entity.Article;
 import com.team4.monew.entity.Comment;
 import com.team4.monew.entity.CommentLike;
-import com.team4.monew.entity.Article;
 import com.team4.monew.entity.User;
-import com.team4.monew.exception.MonewException;
 import com.team4.monew.exception.ErrorCode;
+import com.team4.monew.exception.MonewException;
 import com.team4.monew.mapper.CommentLikeMapper;
 import com.team4.monew.mapper.CommentMapper;
+import com.team4.monew.repository.ArticleRepository;
 import com.team4.monew.repository.CommentLikeRepository;
 import com.team4.monew.repository.CommentRepository;
-import com.team4.monew.repository.ArticleRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.CommentService;
 import java.time.Instant;
@@ -25,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -41,6 +41,7 @@ public class BasicCommentService implements CommentService {
   private final CommentLikeRepository commentLikeRepository;
   private final CommentMapper commentMapper;
   private final CommentLikeMapper commentLikeMapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   @Override
@@ -126,6 +127,13 @@ public class BasicCommentService implements CommentService {
 
     comment.increaseLikeCount();
     commentRepository.save(comment);
+
+    //알림 생성 이벤트 발행
+    eventPublisher.publishEvent(new CommentLikeCreatedEventForNotification(
+        commentId,
+        userId,
+        comment.getUser().getId()
+    ));
 
     return commentLikeMapper.toDto(like);
   }

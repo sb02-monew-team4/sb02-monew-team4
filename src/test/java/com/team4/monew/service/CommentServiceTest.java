@@ -5,23 +5,31 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.team4.monew.asynchronous.event.commentlike.CommentLikeCreatedEventForNotification;
 import com.team4.monew.dto.comment.CommentDto;
 import com.team4.monew.dto.comment.CommentLikeDto;
 import com.team4.monew.dto.comment.CommentRegisterRequest;
 import com.team4.monew.dto.comment.CommentUpdateRequest;
 import com.team4.monew.dto.comment.CursorPageResponseCommentDto;
+import com.team4.monew.entity.Article;
 import com.team4.monew.entity.Comment;
 import com.team4.monew.entity.CommentLike;
-import com.team4.monew.entity.Article;
 import com.team4.monew.entity.User;
 import com.team4.monew.exception.ErrorCode;
 import com.team4.monew.exception.MonewException;
+import com.team4.monew.mapper.CommentLikeMapper;
 import com.team4.monew.mapper.CommentMapper;
+import com.team4.monew.repository.ArticleRepository;
 import com.team4.monew.repository.CommentLikeRepository;
 import com.team4.monew.repository.CommentRepository;
-import com.team4.monew.repository.ArticleRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicCommentService;
 import java.time.Instant;
@@ -33,9 +41,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,6 +66,15 @@ public class CommentServiceTest {
 
   @Mock
   private CommentMapper commentMapper;
+
+  @Mock
+  private CommentLikeMapper commentLikeMapper;
+
+  @Mock
+  private ApplicationEventPublisher eventPublisher;
+
+  @Captor
+  private ArgumentCaptor<CommentLikeCreatedEventForNotification> eventCaptor;
 
   @InjectMocks
   private BasicCommentService basicCommentService;
@@ -240,6 +260,7 @@ public class CommentServiceTest {
     assertEquals(20L, actualResponse.totalElement());
     assertTrue(actualResponse.hasNext());
   }
+
   @Test
   @DisplayName("댓글 목록 조회 실패 - 결과 없음")
   void testFindCommentsByLikeCount_EmptyResult() {
@@ -298,6 +319,20 @@ public class CommentServiceTest {
 
     when(commentRepository.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
+    CommentLikeDto expectedDto = new CommentLikeDto(
+        expectedLikeId,
+        userId,
+        now,
+        commentId,
+        articleId,
+        userId,
+        user.getNickname(),
+        comment.getContent(),
+        comment.getLikeCount().intValue(),
+        comment.getCreatedAt()
+    );
+    when(commentLikeMapper.toDto(any(CommentLike.class))).thenReturn(expectedDto);
+
     CommentLikeDto result = basicCommentService.likeComment(commentId, userId);
 
     assertNotNull(result);
@@ -305,6 +340,14 @@ public class CommentServiceTest {
     assertEquals(commentId, result.commentId());
     assertEquals(userId, result.likedBy());
     assertEquals(1, comment.getLikeCount());
+
+    // 이벤트 발행 검증
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+    CommentLikeCreatedEventForNotification event = eventCaptor.getValue();
+    assertEquals(commentId, event.commentId());
+    assertEquals(userId, event.likerId());
+    assertEquals(user.getId(), event.commentOwnerId());
   }
 
   @Test
@@ -328,6 +371,9 @@ public class CommentServiceTest {
     });
 
     assertEquals(ErrorCode.COMMENT_ALREADY_LIKED, exception.getErrorCode());
+
+    // 이벤트 발행하지 않음
+    verify(eventPublisher, never()).publishEvent(eventCaptor.capture());
   }
 
   @Test
@@ -343,6 +389,9 @@ public class CommentServiceTest {
     });
 
     assertEquals(ErrorCode.COMMENT_NOT_FOUND, exception.getErrorCode());
+
+    // 이벤트 발행하지 않음
+    verify(eventPublisher, never()).publishEvent(eventCaptor.capture());
   }
 
   @Test

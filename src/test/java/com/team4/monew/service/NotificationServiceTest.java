@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 
 import com.team4.monew.dto.notifications.CursorPageResponseNotificationDto;
 import com.team4.monew.dto.notifications.NotificationDto;
@@ -13,8 +14,10 @@ import com.team4.monew.entity.ResourceType;
 import com.team4.monew.entity.User;
 import com.team4.monew.exception.ErrorCode;
 import com.team4.monew.exception.notification.NotificationNotFoundException;
+import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.mapper.NotificationMapper;
 import com.team4.monew.repository.NotificationRepository;
+import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicNotificationService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -40,6 +43,9 @@ public class NotificationServiceTest {
 
   @Mock
   private NotificationRepository notificationRepository;
+
+  @Mock
+  private UserRepository userRepository;
 
   @Mock
   private NotificationMapper notificationMapper;
@@ -69,6 +75,121 @@ public class NotificationServiceTest {
     ReflectionTestUtils.setField(notification, "id", notificationId);
     ReflectionTestUtils.setField(notification, "createdAt", Instant.now());
     ReflectionTestUtils.setField(notification, "updatedAt", Instant.now());
+  }
+
+  @Test
+  @DisplayName("댓글에 좋아요가 눌리면 알림 생성_성공")
+  void createForCommentLike_Success_ShouldReturnCreatedNotification() {
+    // given
+    UUID commentId = UUID.randomUUID();
+    UUID ownerId = UUID.randomUUID();
+    UUID likerId = UUID.randomUUID();
+
+    User owner = User.create("email@email.com", "owner", "password1!");
+    User liker = User.create("email@email.com", "liker", "password1!");
+    ReflectionTestUtils.setField(owner, "id", ownerId);
+    ReflectionTestUtils.setField(liker, "id", likerId);
+
+    given(userRepository.findById(ownerId)).willReturn(Optional.of(owner));
+    given(userRepository.findById(likerId)).willReturn(Optional.of(liker));
+
+    Notification notification = Notification.create(
+        owner,
+        "liker님이 나의 댓글을 좋아합니다.",
+        commentId,
+        ResourceType.COMMENT
+    );
+    given(notificationRepository.save(any(Notification.class))).willReturn(notification);
+
+    // when
+    Notification result = notificationService.createForCommentLike(commentId, ownerId, likerId);
+
+    // then
+    assertThat(result.getUser()).isEqualTo(owner);
+    assertThat(result.getContent()).isEqualTo("liker님이 나의 댓글을 좋아합니다.");
+    assertThat(result.getResourceId()).isEqualTo(commentId);
+
+    then(notificationRepository).should().save(any(Notification.class));
+    then(userRepository).should().findById(ownerId);
+    then(userRepository).should().findById(likerId);
+  }
+
+  @Test
+  @DisplayName("댓글에 좋아요가 눌리면 알림 생성_실패_좋아요를 누른 사람이 존재하지 않는 경우")
+  void createForCommentLike_Failure_LikerNotFound() {
+    // given
+    UUID commentId = UUID.randomUUID();
+    UUID ownerId = UUID.randomUUID();
+    UUID likerId = UUID.randomUUID();
+
+    User owner = User.create("email@email.com", "owner", "password1!");
+    ReflectionTestUtils.setField(owner, "id", ownerId);
+
+    given(userRepository.findById(ownerId)).willReturn(Optional.of(owner));
+    given(userRepository.findById(likerId)).willReturn(Optional.empty());
+
+    // when & then
+    UserNotFoundException exception = assertThrows(UserNotFoundException.class,
+        () -> notificationService.createForCommentLike(commentId, likerId, ownerId));
+
+    assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USER_NOT_FOUND);
+    assertThat(exception.getDetails().get("userId")).isEqualTo(likerId);
+
+    then(userRepository).should().findById(ownerId);
+    then(userRepository).should().findById(likerId);
+    then(notificationRepository).shouldHaveNoInteractions();
+  }
+
+  @Test
+  @DisplayName("구독 중인 관심사와 관련된 기사가 새로 등록되면 알림 생성_성공")
+  void createForNewArticles_Success_ShouldReturnCreatedNotification() {
+    // given
+    UUID interestId = UUID.randomUUID();
+    String interestName = "IT";
+    int articleCount = 10;
+
+    given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+    Notification notification = Notification.create(
+        user,
+        "IT와(과) 관련된 새로운 기사가 10건 등록되었습니다.",
+        interestId,
+        ResourceType.INTEREST
+    );
+    given(notificationRepository.save(any(Notification.class))).willReturn(notification);
+
+    // when
+    Notification result = notificationService.createForNewArticles(interestId, interestName, articleCount, userId);
+
+    // then
+    assertThat(result.getUser()).isEqualTo(user);
+    assertThat(result.getContent()).isEqualTo("IT와(과) 관련된 새로운 기사가 10건 등록되었습니다.");
+    assertThat(result.getResourceId()).isEqualTo(interestId);
+
+    then(notificationRepository).should().save(any(Notification.class));
+    then(userRepository).should().findById(userId);
+  }
+
+  @Test
+  @DisplayName("구독 중인 관심사와 관련된 기사가 새로 등록되면 알림 생성_실패_구독자가 존재하지 않는 경우")
+  void createForNewArticles_Failure_SubscriberNotFound() {
+    // given
+    UUID interestId = UUID.randomUUID();
+    String interestName = "과학";
+    int articleCount = 3;
+    UUID subscriberId = UUID.randomUUID();
+
+    given(userRepository.findById(subscriberId)).willReturn(Optional.empty());
+
+    // when & then
+    UserNotFoundException exception = assertThrows(UserNotFoundException.class,
+        () -> notificationService.createForNewArticles(interestId, interestName, articleCount, subscriberId));
+
+    assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USER_NOT_FOUND);
+    assertThat(exception.getDetails().get("userId")).isEqualTo(subscriberId);
+
+    then(userRepository).should().findById(subscriberId);
+    then(notificationRepository).shouldHaveNoInteractions();
   }
 
   @Test

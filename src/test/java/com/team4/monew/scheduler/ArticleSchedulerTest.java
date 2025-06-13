@@ -1,30 +1,45 @@
 package com.team4.monew.scheduler;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.team4.monew.asynchronous.event.article.ArticleCreatedEventForNotification;
 import com.team4.monew.entity.Article;
+import com.team4.monew.entity.Interest;
+import com.team4.monew.entity.Subscription;
+import com.team4.monew.entity.User;
 import com.team4.monew.repository.ArticleRepository;
+import com.team4.monew.repository.SubscriptionRepository;
 import com.team4.monew.service.collector.NaverApiCollectorService;
 import com.team4.monew.service.collector.RssCollectorService;
 import com.team4.monew.service.filter.KeywordFilterService;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ArticleSchedulerTest {
@@ -41,12 +56,25 @@ class ArticleSchedulerTest {
   @Mock
   private ArticleRepository articleRepository;
 
+  @Mock
+  private SubscriptionRepository subscriptionRepository;
+
+  @Mock
+  private ApplicationEventPublisher eventPublisher;
+
+  @Captor
+  private ArgumentCaptor<ArticleCreatedEventForNotification> eventCaptor;
+
   @InjectMocks
   private ArticleScheduler articleScheduler;
 
   private List<Article> testRssArticles;
   private List<Article> testNaverArticles;
   private List<Article> testFilteredArticles;
+
+  private User user1;
+  private User user2;
+  private Interest interest;
 
   @BeforeEach
   void setUp() {
@@ -72,6 +100,44 @@ class ArticleSchedulerTest {
     return new Article(source, link, title, Instant.now(), "테스트 기사 요약");
   }
 
+  private void setUpForPublishEvent(List<Article> articles){
+    user1 = User.create("test1@email.com", "user1", "pw");
+    ReflectionTestUtils.setField(user1, "id", UUID.randomUUID());
+    user2 = User.create("test2@email.com", "user2", "pw");
+    ReflectionTestUtils.setField(user2, "id", UUID.randomUUID());
+
+    interest = new Interest(UUID.randomUUID(), "IT", 2L, Instant.now(), Instant.now(), List.of(), new HashSet<>(articles));
+    for (Article article : articles) {
+      if (!article.getInterest().contains(interest)) {
+        article.addInterest(interest);
+      }
+    }
+
+    Subscription subscription1 = mock(Subscription.class);
+    Subscription subscription2 = mock(Subscription.class);
+
+    when(subscription1.getUser()).thenReturn(user1);
+    when(subscription2.getUser()).thenReturn(user2);
+
+    when(subscriptionRepository.findByInterest(interest)).thenReturn(Arrays.asList(subscription1,
+        subscription2));
+    when(articleRepository.save(any(Article.class))).thenAnswer(invocation -> invocation.getArgument(0));
+  }
+
+  private void verifyPublishEvent(List<Article> articles){
+    verify(eventPublisher, times(2)).publishEvent(eventCaptor.capture());
+
+    List<ArticleCreatedEventForNotification> capturedEvents = eventCaptor.getAllValues();
+    assertEquals(2, capturedEvents.size());
+    assertTrue(capturedEvents.stream().anyMatch(e -> e.subscriberId().equals(user1.getId())));
+    assertTrue(capturedEvents.stream().anyMatch(e -> e.subscriberId().equals(user2.getId())));
+
+    ArticleCreatedEventForNotification firstEvent = capturedEvents.get(0);
+    assertEquals(interest.getId(), firstEvent.interestId());
+    assertEquals(interest.getName(), firstEvent.interestName());
+    assertEquals(articles.size(), firstEvent.articleCount());
+  }
+
   @Test
   @DisplayName("정상적인 기사 수집 및 처리 플로우 검증")
   void testHourlyArticleProcessing_NormalFlow() {
@@ -80,6 +146,12 @@ class ArticleSchedulerTest {
     when(naverApiCollectorService.collectArticles()).thenReturn(testNaverArticles);
     when(keywordFilterService.filterArticles(testRssArticles)).thenReturn(testFilteredArticles);
     when(articleRepository.existsByOriginalLink(anyString())).thenReturn(false);
+
+    // 이벤트 발행 시 필요한 데이터 세팅 - 관심사, 구독자
+    List<Article> totalArticles = new ArrayList<>();
+    totalArticles.addAll(testFilteredArticles);
+    totalArticles.addAll(testNaverArticles);
+    setUpForPublishEvent(totalArticles);
 
     // When
     articleScheduler.hourlyArticleProcessing();
@@ -92,6 +164,9 @@ class ArticleSchedulerTest {
     // 저장 로직 검증
     verify(articleRepository, times(3)).existsByOriginalLink(anyString());
     verify(articleRepository, times(3)).save(any(Article.class));
+
+    // 이벤트 발행 검증
+    verifyPublishEvent(totalArticles);
   }
 
   @Test
@@ -102,6 +177,9 @@ class ArticleSchedulerTest {
     when(naverApiCollectorService.collectArticles()).thenReturn(Collections.emptyList());
     when(keywordFilterService.filterArticles(testRssArticles)).thenReturn(testFilteredArticles);
     when(articleRepository.existsByOriginalLink(anyString())).thenReturn(false);
+
+    // 이벤트 발행 시 필요한 데이터 세팅 - 관심사, 구독자
+    setUpForPublishEvent(testFilteredArticles);
 
     // When
     articleScheduler.hourlyArticleProcessing();
@@ -115,6 +193,9 @@ class ArticleSchedulerTest {
       verify(articleRepository, times(1)).existsByOriginalLink(article.getOriginalLink());
       verify(articleRepository, times(1)).save(article);
     }
+
+    // 이벤트 발행 검증
+    verifyPublishEvent(testFilteredArticles);
   }
 
   @Test
@@ -127,6 +208,9 @@ class ArticleSchedulerTest {
         Collections.emptyList());
     when(articleRepository.existsByOriginalLink(anyString())).thenReturn(false);
 
+    // 이벤트 발행 시 필요한 데이터 세팅 - 관심사, 구독자
+    setUpForPublishEvent(testNaverArticles);
+
     // When
     articleScheduler.hourlyArticleProcessing();
 
@@ -138,6 +222,9 @@ class ArticleSchedulerTest {
       verify(articleRepository, times(1)).existsByOriginalLink(article.getOriginalLink());
       verify(articleRepository, times(1)).save(article);
     }
+
+    // 이벤트 발행 검증
+    verifyPublishEvent(testNaverArticles);
   }
 
   @Test
@@ -159,6 +246,9 @@ class ArticleSchedulerTest {
     when(keywordFilterService.filterArticles(largeRssCollection)).thenReturn(filteredResult);
     when(articleRepository.existsByOriginalLink(anyString())).thenReturn(false);
 
+    // 이벤트 발행 시 필요한 데이터 세팅 - 관심사, 구독자
+    setUpForPublishEvent(filteredResult);
+
     // When
     articleScheduler.hourlyArticleProcessing();
 
@@ -170,6 +260,9 @@ class ArticleSchedulerTest {
         filteredResult.get(0).getOriginalLink());
     verify(articleRepository, times(1)).save(filteredResult.get(0));
     verify(articleRepository, times(1)).save(any(Article.class)); // 총 1개만 저장
+
+    // 이벤트 발행 검증
+    verifyPublishEvent(filteredResult);
   }
 
   @Test
@@ -187,6 +280,9 @@ class ArticleSchedulerTest {
     when(articleRepository.existsByOriginalLink(
         testNaverArticles.get(1).getOriginalLink())).thenReturn(false);
 
+    // 이벤트 발행 시 필요한 데이터 세팅 - 관심사, 구독자
+    setUpForPublishEvent(List.of(testNaverArticles.get(1)));
+
     // When
     articleScheduler.hourlyArticleProcessing();
 
@@ -194,6 +290,9 @@ class ArticleSchedulerTest {
     verify(articleRepository, times(2)).existsByOriginalLink(anyString());
     verify(articleRepository, never()).save(testNaverArticles.get(0)); // 중복 기사는 저장되지 않음
     verify(articleRepository, times(1)).save(testNaverArticles.get(1)); // 새로운 기사만 저장됨
+
+    // 이벤트 발행 검증
+    verifyPublishEvent(List.of(testNaverArticles.get(1)));
   }
 
   @Test
@@ -216,6 +315,8 @@ class ArticleSchedulerTest {
     // 저장 관련 메서드는 호출되지 않아야 함
     verify(articleRepository, never()).existsByOriginalLink(anyString());
     verify(articleRepository, never()).save(any(Article.class));
+    // 이벤트 발행되지 않아야 함
+    verify(eventPublisher, never()).publishEvent(eventCaptor.capture());
   }
 
   @Test
@@ -237,6 +338,9 @@ class ArticleSchedulerTest {
     when(articleRepository.existsByOriginalLink("https://duplicate.com")).thenReturn(true);
     when(articleRepository.existsByOriginalLink("https://new2.com")).thenReturn(false);
 
+    // 이벤트 발행 시 필요한 데이터 세팅 - 관심사, 구독자
+    setUpForPublishEvent(List.of(mixedArticles.get(0), mixedArticles.get(2)));
+
     // When
     articleScheduler.hourlyArticleProcessing();
 
@@ -249,6 +353,9 @@ class ArticleSchedulerTest {
     verify(articleRepository, times(1)).save(mixedArticles.get(0)); // 첫 번째 새 기사
     verify(articleRepository, never()).save(mixedArticles.get(1));  // 중복 기사는 저장 안 됨
     verify(articleRepository, times(1)).save(mixedArticles.get(2)); // 세 번째 새 기사
+
+    // 이벤트 발행 검증
+    verifyPublishEvent(List.of(mixedArticles.get(0), mixedArticles.get(2)));
   }
 
   @Test
@@ -259,6 +366,12 @@ class ArticleSchedulerTest {
     when(naverApiCollectorService.collectArticles()).thenReturn(testNaverArticles);
     when(keywordFilterService.filterArticles(any())).thenReturn(testFilteredArticles);
     when(articleRepository.existsByOriginalLink(anyString())).thenReturn(false);
+
+    // 이벤트 발행 시 필요한 데이터 세팅 - 관심사, 구독자
+    List<Article> totalArticles = new ArrayList<>();
+    totalArticles.addAll(testFilteredArticles);
+    totalArticles.addAll(testNaverArticles);
+    setUpForPublishEvent(totalArticles);
 
     // When
     articleScheduler.hourlyArticleProcessing();
@@ -274,5 +387,8 @@ class ArticleSchedulerTest {
     verifyNoMoreInteractions(rssCollectorService);
     verifyNoMoreInteractions(naverApiCollectorService);
     verifyNoMoreInteractions(keywordFilterService);
+
+    // 이벤트 발행 검증
+    verifyPublishEvent(totalArticles);
   }
 }
