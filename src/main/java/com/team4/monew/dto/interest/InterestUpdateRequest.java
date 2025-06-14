@@ -3,7 +3,6 @@ package com.team4.monew.dto.interest;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import java.util.List;
-import lombok.Getter;
 
 public record InterestUpdateRequest(
     @NotEmpty(message = "최소 1개의 키워드를 입력해야 합니다.")
