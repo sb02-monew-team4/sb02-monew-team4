@@ -100,33 +100,31 @@ class ArticleSchedulerTest {
     return new Article(source, link, title, Instant.now(), "테스트 기사 요약");
   }
 
-  private void setUpForPublishEvent(List<Article> articles) {
+  private void setUpForPublishEvent(List<Article> articles){
     user1 = User.create("test1@email.com", "user1", "pw");
     ReflectionTestUtils.setField(user1, "id", UUID.randomUUID());
     user2 = User.create("test2@email.com", "user2", "pw");
     ReflectionTestUtils.setField(user2, "id", UUID.randomUUID());
 
-    interest = new Interest(UUID.randomUUID(), "IT", 2L, Instant.now(), Instant.now(), List.of(),
-        List.of(), new HashSet<>(articles));
+    Subscription subscription1 = mock(Subscription.class);
+    Subscription subscription2 = mock(Subscription.class);
+
+    interest = new Interest(UUID.randomUUID(), "IT", 2L, Instant.now(), Instant.now(), List.of(), List.of(subscription1, subscription2), new HashSet<>(articles));
     for (Article article : articles) {
       if (!article.getInterest().contains(interest)) {
         article.addInterest(interest);
       }
     }
 
-    Subscription subscription1 = mock(Subscription.class);
-    Subscription subscription2 = mock(Subscription.class);
-
     when(subscription1.getUser()).thenReturn(user1);
     when(subscription2.getUser()).thenReturn(user2);
 
     when(subscriptionRepository.findByInterest(interest)).thenReturn(Arrays.asList(subscription1,
         subscription2));
-    when(articleRepository.save(any(Article.class))).thenAnswer(
-        invocation -> invocation.getArgument(0));
+    when(articleRepository.save(any(Article.class))).thenAnswer(invocation -> invocation.getArgument(0));
   }
 
-  private void verifyPublishEvent(List<Article> articles) {
+  private void verifyPublishEvent(List<Article> articles){
     verify(eventPublisher, times(2)).publishEvent(eventCaptor.capture());
 
     List<ArticleCreatedEventForNotification> capturedEvents = eventCaptor.getAllValues();
