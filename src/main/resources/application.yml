@@ -34,5 +34,5 @@ logging:
 
 backup:
   s3:
-    bucket: ${backup_bucket_name}
+    bucket: ${bucket_name}
 

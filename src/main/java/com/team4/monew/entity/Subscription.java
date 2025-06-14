@@ -40,8 +40,7 @@ public class Subscription {
   @Column(nullable = false, updatable = false)
   private Instant createdAt;
 
-  public Subscription(UUID id, User user, Interest interest) {
-    this.id = id;
+  public Subscription(User user, Interest interest) {
     this.user = user;
     this.interest = interest;
   }
