@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -81,15 +82,23 @@ public class ArticleScheduler {
       return;
     }
 
+    log.debug("새로 저장된 기사 수: {}", newlyCreatedArticles.size());
+
     // 1. 관심사별로 새로 생성된 기사 수 집계
     Map<Interest, Long> countByInterest = newlyCreatedArticles.stream()
-        .flatMap(article -> article.getInterest().stream())
+        .flatMap(article -> {
+          if (article.getInterest() == null) {
+            log.warn("기사 {}에 연관된 관심사가 null입니다.", article.getId());
+            return Stream.empty();
+          }
+          return article.getInterest().stream();
+        })
         .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+    log.debug("관심사별 집계 결과: {}", countByInterest);
 
     // 2. 각 관심사별로 구독자를 찾아 이벤트를 발행
     countByInterest.forEach((interest, count) -> {
       List<Subscription> subscriptions = subscriptionRepository.findByInterest(interest);
-
       subscriptions.forEach(subscription -> {
         eventPublisher.publishEvent(new ArticleCreatedEventForNotification(
             interest.getId(),
@@ -99,6 +108,8 @@ public class ArticleScheduler {
         ));
       });
     });
+
+    log.info("알림 생성 이벤트 발행 종료");
   }
 
 }

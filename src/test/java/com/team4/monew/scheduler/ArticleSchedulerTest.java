@@ -106,15 +106,15 @@ class ArticleSchedulerTest {
     user2 = User.create("test2@email.com", "user2", "pw");
     ReflectionTestUtils.setField(user2, "id", UUID.randomUUID());
 
-    interest = new Interest(UUID.randomUUID(), "IT", 2L, Instant.now(), Instant.now(), List.of(), new HashSet<>(articles));
+    Subscription subscription1 = mock(Subscription.class);
+    Subscription subscription2 = mock(Subscription.class);
+
+    interest = new Interest(UUID.randomUUID(), "IT", 2L, Instant.now(), Instant.now(), List.of(), List.of(subscription1, subscription2), new HashSet<>(articles));
     for (Article article : articles) {
       if (!article.getInterest().contains(interest)) {
         article.addInterest(interest);
       }
     }
-
-    Subscription subscription1 = mock(Subscription.class);
-    Subscription subscription2 = mock(Subscription.class);
 
     when(subscription1.getUser()).thenReturn(user1);
     when(subscription2.getUser()).thenReturn(user2);
