@@ -1,6 +1,5 @@
 package com.team4.monew.exception.article;
 
-import com.team4.monew.entity.Article;
 import com.team4.monew.exception.ErrorCode;
 import java.util.Map;
 import java.util.UUID;
@@ -11,7 +10,8 @@ public class ArticleNotFoundException extends ArticleException {
     super(errorCode, details);
   }
 
-  public static ArticleNotFoundException byId(UUID newsId) {
-    return new ArticleNotFoundException(ErrorCode.NEWS_NOT_FOUND, Map.of("newsId", newsId));
+  public static ArticleNotFoundException byId(UUID ArticleId) {
+    return new ArticleNotFoundException(ErrorCode.ARTICLE_NOT_FOUND,
+        Map.of("ArticleId", ArticleId));
   }
 }

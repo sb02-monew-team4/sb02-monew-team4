@@ -10,7 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface CommentService {
-  CommentDto register(UUID userId, CommentRegisterRequest request);
+  CommentDto register(UUID authenticatedUserId, CommentRegisterRequest request);
   CursorPageResponseCommentDto getCommentsByArticleWithCursor(
       UUID articleId,
       String orderBy,

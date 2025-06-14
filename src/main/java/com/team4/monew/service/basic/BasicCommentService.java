@@ -45,20 +45,24 @@ public class BasicCommentService implements CommentService {
 
   @Transactional
   @Override
-  public CommentDto register(UUID userId, CommentRegisterRequest request) {
+  public CommentDto register(UUID authenticatedUserId, CommentRegisterRequest request) {
 
-    User user = userRepository.findById(userId)
+    if (!authenticatedUserId.equals(request.userId())) {
+      throw new MonewException(ErrorCode.UNAUTHORIZED_ACCESS);
+    }
+
+    User user = userRepository.findById(request.userId())
         .orElseThrow(() -> new MonewException(ErrorCode.USER_NOT_FOUND));
 
     Article article = articleRepository.findById(request.articleId())
-        .orElseThrow(() -> new MonewException(ErrorCode.NEWS_NOT_FOUND));
+        .orElseThrow(() -> new MonewException(ErrorCode.ARTICLE_NOT_FOUND));
 
     Comment comment = new Comment(user, article, request.content());
     Comment saved = commentRepository.save(comment);
 
     article.incrementCommentCount();
 
-    return commentMapper.toDto(saved, userId);
+    return commentMapper.toDto(saved, request.userId());
   }
 
   @Override

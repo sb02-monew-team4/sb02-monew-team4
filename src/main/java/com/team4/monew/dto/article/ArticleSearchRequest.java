@@ -48,8 +48,8 @@ public record ArticleSearchRequest(
       limit = 10;
     }
 
-    if (limit() < 1 || limit() > 100) {
-      throw new IllegalArgumentException("limit은 1과 100 사이의 값이어야 합니다");
+    if (limit > 100) {
+      throw new IllegalArgumentException("limit은 100 이하의 값이어야 합니다");
     }
 
     if (publishDateFrom != null && publishDateTo != null && publishDateFrom.isAfter(

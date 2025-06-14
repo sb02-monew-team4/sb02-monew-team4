@@ -22,7 +22,7 @@ public class CommentController {
   @PostMapping
   public ResponseEntity<CommentDto> register(
       @Valid @RequestBody CommentRegisterRequest request,
-      HttpServletRequest servletRequest
+    HttpServletRequest servletRequest
   ) {
     UUID authenticatedUserId = (UUID) servletRequest.getAttribute("authenticatedUserId");
 
@@ -33,11 +33,10 @@ public class CommentController {
   @PatchMapping("/{commentId}")
   public ResponseEntity<CommentDto> update(
       @PathVariable UUID commentId,
-      HttpServletRequest servletRequest,
+      @RequestHeader("Monew-Request-User-ID") UUID requesterId,
       @Valid @RequestBody CommentUpdateRequest request
   ) {
-    UUID authenticatedUserId = (UUID) servletRequest.getAttribute("authenticatedUserId");
-    CommentDto response = commentService.update(commentId, authenticatedUserId, request);
+    CommentDto response = commentService.update(commentId, requesterId, request);
     return ResponseEntity.ok(response);
   }
 
@@ -49,7 +48,7 @@ public class CommentController {
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) String after,
       @RequestParam int limit,
-      HttpServletRequest servletRequest
+      @RequestHeader("Monew-Request-User-ID") UUID requesterId
   ) {
     if (!orderBy.equals("createdAt") && !orderBy.equals("likeCount")) {
       throw new MonewException(ErrorCode.INVALID_ORDER_BY);
@@ -63,10 +62,8 @@ public class CommentController {
       throw new MonewException(ErrorCode.INVALID_LIMIT);
     }
 
-    UUID authenticatedUserId = (UUID) servletRequest.getAttribute("authenticatedUserId");
-
     CursorPageResponseCommentDto response = commentService.getCommentsByArticleWithCursor(
-        articleId, orderBy, direction, cursor, after, limit, authenticatedUserId
+        articleId, orderBy, direction, cursor, after, limit, requesterId
     );
     return ResponseEntity.ok(response);
   }
@@ -74,40 +71,36 @@ public class CommentController {
   @PostMapping("/{commentId}/comment-likes")
   public ResponseEntity<CommentLikeDto> likeComment(
       @PathVariable UUID commentId,
-      HttpServletRequest servletRequest
+      @RequestHeader("Monew-Request-User-ID") UUID requesterId
   ) {
-    UUID authenticatedUserId = (UUID) servletRequest.getAttribute("authenticatedUserId");
-    CommentLikeDto likeDto = commentService.likeComment(commentId, authenticatedUserId);
+    CommentLikeDto likeDto = commentService.likeComment(commentId, requesterId);
     return ResponseEntity.ok(likeDto);
   }
 
   @DeleteMapping("/{commentId}/comment-likes")
   public ResponseEntity<Void> unlikeComment(
       @PathVariable UUID commentId,
-      HttpServletRequest servletRequest
+      @RequestHeader("Monew-Request-User-ID") UUID requesterId
   ) {
-    UUID authenticatedUserId = (UUID) servletRequest.getAttribute("authenticatedUserId");
-    commentService.unlikeComment(commentId, authenticatedUserId);
+    commentService.unlikeComment(commentId, requesterId);
     return ResponseEntity.ok().build();
   }
 
   @DeleteMapping("/{commentId}")
   public ResponseEntity<Void> softDelete(
       @PathVariable UUID commentId,
-      HttpServletRequest request
+      @RequestHeader("Monew-Request-User-ID") UUID requesterId
   ) {
-    UUID authenticatedUserId = (UUID) request.getAttribute("authenticatedUserId");
-    commentService.softDelete(commentId, authenticatedUserId);
+    commentService.softDelete(commentId, requesterId);
     return ResponseEntity.noContent().build();
   }
 
   @DeleteMapping("/{commentId}/hard")
   public ResponseEntity<Void> hardDelete(
       @PathVariable UUID commentId,
-      HttpServletRequest request
+      @RequestHeader("Monew-Request-User-ID") UUID requesterId
   ) {
-    UUID authenticatedUserId = (UUID) request.getAttribute("authenticatedUserId");
-    commentService.hardDelete(commentId, authenticatedUserId);
+    commentService.hardDelete(commentId, requesterId);
     return ResponseEntity.noContent().build();
   }
 }
