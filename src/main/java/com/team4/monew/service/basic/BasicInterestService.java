@@ -175,7 +175,7 @@ public class BasicInterestService implements InterestService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new MonewException(ErrorCode.USER_NOT_FOUND));
 
-    Subscription subscription = new Subscription(UUID.randomUUID(), user, interest);
+    Subscription subscription = new Subscription(user, interest);
     subscriptionRepository.save(subscription);
 
     interest.increaseSubscriberCount();
