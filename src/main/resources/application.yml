@@ -16,6 +16,7 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   data:
     mongodb:
+      uri: ${MONGODB_URI}
       host: localhost
       port: 27017
       database: monew-db
@@ -30,5 +31,5 @@ naver:
 
 logging:
   s3:
-    bucket: ${bucket_name}
+    bucket: ${AWS_S3_BUCKET}
 
