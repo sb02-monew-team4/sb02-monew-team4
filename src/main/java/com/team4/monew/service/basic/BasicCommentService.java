@@ -55,7 +55,7 @@ public class BasicCommentService implements CommentService {
         .orElseThrow(() -> new MonewException(ErrorCode.USER_NOT_FOUND));
 
     Article article = articleRepository.findById(request.articleId())
-        .orElseThrow(() -> new MonewException(ErrorCode.NEWS_NOT_FOUND));
+        .orElseThrow(() -> new MonewException(ErrorCode.ARTICLE_NOT_FOUND));
 
     Comment comment = new Comment(user, article, request.content());
     Comment saved = commentRepository.save(comment);
