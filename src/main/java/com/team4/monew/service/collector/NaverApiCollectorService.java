@@ -92,13 +92,18 @@ public class NaverApiCollectorService {
     }
   }
 
+  // summary 길이 150 넘으면 substring 하도록 수정
   private Article convertToArticle(SyndEntry entry) {
+    String summary = entry.getDescription().getValue();
+    if (summary.length() > 150) {
+      summary = summary.substring(0, 150);
+    }
     return new Article(
         "NAVER",
         extractOriginalLink(entry),
         entry.getTitle(),
         entry.getPublishedDate().toInstant(),
-        entry.getDescription().getValue()
+        summary
     );
   }
 
