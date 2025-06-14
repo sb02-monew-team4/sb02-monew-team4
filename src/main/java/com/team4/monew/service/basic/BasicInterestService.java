@@ -128,7 +128,11 @@ public class BasicInterestService implements InterestService {
     List<String> keywords = Optional.ofNullable(request.keywords())
         .orElseThrow(() -> new MonewException(ErrorCode.KEYWORDS_REQUIRED));
 
-    List<String> distinctKeywords = keywords.stream().distinct().toList();
+    List<String> distinctKeywords = keywords.stream()
+        .map(String::trim)
+        .filter(k -> !k.isEmpty())
+        .distinct()
+        .toList();
 
     if (distinctKeywords.isEmpty()) {
       throw new MonewException(ErrorCode.KEYWORDS_REQUIRED);

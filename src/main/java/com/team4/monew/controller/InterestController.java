@@ -53,7 +53,7 @@ public class InterestController {
 
   @GetMapping
   public ResponseEntity<CursorPageResponseInterestDto> getInterests(
-      @RequestParam String keyword,
+      @RequestParam(required = false) String keyword,
       @RequestParam String orderBy,
       @RequestParam String direction,
       @RequestParam(required = false) String cursor,
