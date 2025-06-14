@@ -1,5 +1,6 @@
 package com.team4.monew.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -67,6 +68,7 @@ public class Article {
       joinColumns = @JoinColumn(name = "article_id"),
       inverseJoinColumns = @JoinColumn(name = "interest_id")
   )
+  @JsonIgnore
   private Set<Interest> interest = new HashSet<>();
 
   public Article(String source, String originalLink, String title, Instant publishedDate,
