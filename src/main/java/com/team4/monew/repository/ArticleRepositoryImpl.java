@@ -52,7 +52,7 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
             buildConditions(
                 request.keyword(),
                 request.interestId(),
-                request.SourceIn(),
+                request.sourceIn(),
                 request.publishDateFrom(),
                 request.publishDateTo(),
                 request.cursor(),
@@ -107,7 +107,7 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
     long totalElements = countArticlesWithConditions(
         request.keyword(),
         request.interestId(),
-        request.SourceIn(),
+        request.sourceIn(),
         request.publishDateFrom(),
         request.publishDateTo());
 

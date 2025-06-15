@@ -13,7 +13,7 @@ public record ArticleSearchRequest(
     @Size(max = 100, message = "키워드는 100자를 초과할 수 없습니다")
     String keyword,
     UUID interestId,
-    List<String> SourceIn,
+    List<String> sourceIn,
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     Instant publishDateFrom,
@@ -48,8 +48,8 @@ public record ArticleSearchRequest(
       limit = 10;
     }
 
-    if (limit() < 1 || limit() > 100) {
-      throw new IllegalArgumentException("limit은 1과 100 사이의 값이어야 합니다");
+    if (limit > 100) {
+      throw new IllegalArgumentException("limit은 100 이하의 값이어야 합니다");
     }
 
     if (publishDateFrom != null && publishDateTo != null && publishDateFrom.isAfter(
