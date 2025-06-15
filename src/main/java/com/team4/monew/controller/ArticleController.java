@@ -1,10 +1,12 @@
 package com.team4.monew.controller;
 
+import com.team4.monew.dto.article.ArticleRestoreResultDto;
 import com.team4.monew.dto.article.ArticleSearchRequest;
 import com.team4.monew.dto.article.ArticleViewDto;
 import com.team4.monew.dto.article.CursorPageResponseArticleDto;
 import com.team4.monew.service.ArticleService;
 import jakarta.validation.Valid;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -55,16 +58,16 @@ public class ArticleController {
     return ResponseEntity.ok(sources);
   }
 
-//  @Transactional
-//  @GetMapping("/api/articles/restore")
-//  public ResponseEntity<ArticleRestoreResultDto> restore(
-//      @RequestParam Instant from,
-//      @RequestParam Instant to
-//  ) {
-//    ArticleRestoreResultDto response = articleService.restore();
-//
-//    return ResponseEntity.ok(response);
-//  }
+  @Transactional
+  @GetMapping("/api/articles/restore")
+  public ResponseEntity<ArticleRestoreResultDto> restore(
+      @RequestParam Instant from,
+      @RequestParam Instant to
+  ) {
+    ArticleRestoreResultDto response = articleService.restoreArticle(from, to);
+
+    return ResponseEntity.ok(response);
+  }
 
   @Transactional
   @DeleteMapping("/api/articles/{articleId}")

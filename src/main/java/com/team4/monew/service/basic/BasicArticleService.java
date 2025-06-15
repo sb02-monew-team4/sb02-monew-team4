@@ -1,5 +1,6 @@
 package com.team4.monew.service.basic;
 
+import com.team4.monew.dto.article.ArticleRestoreResultDto;
 import com.team4.monew.dto.article.ArticleSearchRequest;
 import com.team4.monew.dto.article.ArticleViewDto;
 import com.team4.monew.dto.article.CursorPageResponseArticleDto;
@@ -14,6 +15,9 @@ import com.team4.monew.repository.ArticleRepository;
 import com.team4.monew.repository.ArticleViewRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.ArticleService;
+import com.team4.monew.service.filter.KeywordFilterService;
+import com.team4.monew.service.s3.ArticleS3Service;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -33,12 +37,8 @@ public class BasicArticleService implements ArticleService {
   private final ArticleRepository articleRepository;
   private final UserRepository userRepository;
   private final ArticleViewMapper articleViewMapper;
-
-  @Override
-  public CursorPageResponseArticleDto getAllArticles(ArticleSearchRequest request, UUID userId) {
-
-    return articleRepository.findArticlesWithCursor(request, userId);
-  }
+  private final ArticleS3Service articleS3Service;
+  private final KeywordFilterService keywordFilterService;
 
   @Override
   public ArticleViewDto registerArticleView(UUID newsId, UUID userId) {
@@ -50,8 +50,48 @@ public class BasicArticleService implements ArticleService {
 
     ArticleView articleView = new ArticleView(article, user);
     ArticleView savedArticleView = articleViewRepository.save(articleView);
+    // viewCount 증가
+    article.incrementViewCount();
     log.info("article ID: {}, user ID: {} articleView 저장 완료", article.getId(), user.getId());
     return articleViewMapper.toDto(savedArticleView);
+  }
+
+  @Override
+  public CursorPageResponseArticleDto getAllArticles(ArticleSearchRequest request, UUID userId) {
+
+    return articleRepository.findArticlesWithCursor(request, userId);
+  }
+
+  @Override
+  public List<String> getAllSources() {
+    List<String> sources = Arrays.stream(ArticleSource.values())
+        .map(ArticleSource::getSource)
+        .collect(Collectors.toList());
+    sources.add("NAVER");
+
+    return sources;
+  }
+
+  @Override
+  public ArticleRestoreResultDto restoreArticle(Instant from, Instant to) {
+    // interest 필드를 @JsonIgnore 처리, S3에서 download 한 Article 들은 interest = new HashSet으로 비어있다.
+    // S3로부터 download 한 Article들을 현재 등록된 interest의 keyword로 filtering + keyword mapping 한다.
+    List<Article> downloadArticles = articleS3Service.getArticlesByDateRange(from, to);
+    List<Article> restoredArticles = keywordFilterService.filterArticles(downloadArticles);
+
+    articleRepository.saveAll(restoredArticles);
+
+    List<UUID> restoredArticlesIds = restoredArticles.stream()
+        .map(Article::getId)
+        .toList();
+
+    long restoredArticleCount = restoredArticles.size();
+
+    return new ArticleRestoreResultDto(
+        Instant.now(),
+        restoredArticlesIds,
+        restoredArticleCount
+    );
   }
 
   @Override
@@ -66,15 +106,5 @@ public class BasicArticleService implements ArticleService {
   public void hardDelete(UUID articleId) {
     articleRepository.deleteById(articleId);
     log.warn("article ID: {} 삭제 완료", articleId);
-  }
-
-  @Override
-  public List<String> getAllSources() {
-    List<String> sources = Arrays.stream(ArticleSource.values())
-        .map(ArticleSource::getSource)
-        .collect(Collectors.toList());
-    sources.add("NAVER");
-
-    return sources;
   }
 }

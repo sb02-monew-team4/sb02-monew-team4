@@ -19,8 +19,11 @@ public enum ErrorCode {
   USER_ACTIVITY_NOT_FOUND(HttpStatus.NOT_FOUND, "유저 활동 내역이 없습니다"),
   USER_ACTIVITY_NOT_FOUND_IN_MONGO(HttpStatus.NOT_FOUND, "MongoDB에서 유저 활동 내역을 찾을 수 없습니다."),
 
-  // NEWS
-  NEWS_NOT_FOUND(HttpStatus.NOT_FOUND, "뉴스를 찾을 수 없습니다."),
+  // Article
+  ARTICLE_NOT_FOUND(HttpStatus.NOT_FOUND, "기사를 찾을 수 없습니다."),
+  ARTICLE_BACKUP_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "기사 백업에 실패했습니다."),
+  ARTICLE_READ_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "백업 기사 다운로드에 실패했습니다."),
+  ARTICLE_SERIALIZATION_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "기사 JSON 직렬화에 실패했습니다."),
 
   // COMMENT
   COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글이 존재하지 않습니다."),
