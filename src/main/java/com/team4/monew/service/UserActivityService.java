@@ -6,6 +6,7 @@ import com.team4.monew.entity.Comment;
 import com.team4.monew.entity.CommentLike;
 import com.team4.monew.entity.Subscription;
 import com.team4.monew.entity.User;
+import java.util.List;
 import java.util.UUID;
 
 public interface UserActivityService {
@@ -38,7 +39,7 @@ public interface UserActivityService {
 
   void removeSubscriptionByInterestId(UUID userId, UUID interestId);
 
-  void updateSubscription(UUID userId, Subscription subscription);
+  void updateSubscriptionKeywords(UUID interestId, List<String> newKeywords);
 
   void syncUserActivity(UUID userId);
 

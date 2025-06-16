@@ -195,23 +195,31 @@ public class BasicUserActivityService implements UserActivityService {
 
   @Transactional
   @Override
-  public void updateSubscription(UUID userId, Subscription subscription) {
-    SubscriptionDto dto = subscriptionMapper.toDto(subscription);
+  public void updateSubscriptionKeywords(UUID interestId, List<String> newKeywords) {
+    List<UserActivity> subscribers = userActivityRepository.findBySubscriptionDtosInterestId(
+        interestId);
 
-    UserActivity userActivity = getUserActivityOrThrow(userId);
-    List<SubscriptionDto> subscriptionDtos = userActivity.getSubscriptionDtos();
-    int idx = -1;
-    for (int i = 0; i < subscriptionDtos.size(); i++) {
-      if (subscriptionDtos.get(i).id().equals(dto.id())) {
-        idx = i;
-        break;
-      }
+    for (UserActivity userActivity : subscribers) {
+      List<SubscriptionDto> updatedSubscriptions = userActivity.getSubscriptionDtos().stream()
+          .map(sub -> {
+            if (sub.interestId().equals(interestId)) {
+              return new SubscriptionDto(
+                  sub.id(),
+                  sub.interestId(),
+                  sub.interestName(),
+                  newKeywords,
+                  sub.interestSubscriberCount(),
+                  sub.createdAt()
+              );
+            }
+            return sub;
+          })
+          .toList();
+
+      userActivity.updateSubscriptionDtos(updatedSubscriptions);
     }
 
-    if (idx != -1) {
-      subscriptionDtos.set(idx, dto);
-      userActivityRepository.save(userActivity);
-    }
+    userActivityRepository.saveAll(subscribers);
   }
 
   @Override

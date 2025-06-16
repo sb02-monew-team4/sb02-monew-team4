@@ -3,6 +3,7 @@ package com.team4.monew.service.basic;
 import com.team4.monew.asynchronous.event.subscription.InterestDeletedEvent;
 import com.team4.monew.asynchronous.event.subscription.SubscriptionCreatedEvent;
 import com.team4.monew.asynchronous.event.subscription.SubscriptionDeletedEvent;
+import com.team4.monew.asynchronous.event.subscription.SubscriptionUpdatedEvent;
 import com.team4.monew.dto.interest.CursorPageResponseInterestDto;
 import com.team4.monew.dto.interest.InterestDto;
 import com.team4.monew.dto.interest.InterestRegisterRequest;
@@ -154,6 +155,8 @@ public class BasicInterestService implements InterestService {
     }
 
     interest.updateKeywords(distinctKeywords);
+
+    eventPublisher.publishEvent(new SubscriptionUpdatedEvent(interestId, distinctKeywords));
 
     return interestMapper.toDto(interest, null);
   }
