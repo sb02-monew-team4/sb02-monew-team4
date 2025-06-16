@@ -34,7 +34,7 @@ public class ArticleScheduler {
   private final ApplicationEventPublisher eventPublisher;
   private final SubscriptionRepository subscriptionRepository;
 
-  @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
+  @Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul")
   @Transactional
   public void hourlyArticleProcessing() {
     log.info("정시 기사 수집 시작");
@@ -45,12 +45,14 @@ public class ArticleScheduler {
 
     log.info("수집 완료: RSS {}개, 네이버 {}개", rssArticles.size(), naverArticles.size());
 
-    // natural Articles 에 keyword 포함 되는지 filter
+    // RSS: natural Articles 에 keyword 포함 되는지 filter
+    // Naver: Article과 Interest 연결하기 위해 filterArticles 호출
     List<Article> filteredRss = filterService.filterArticles(rssArticles);
+    List<Article> filteredNaver = filterService.filterArticles(naverArticles);
 
     // 새로 저장된 기사만 수집
     List<Article> savedFilteredRss = saveUniqueArticles(filteredRss);
-    List<Article> savedNaverArticles = saveUniqueArticles(naverArticles);
+    List<Article> savedNaverArticles = saveUniqueArticles(filteredNaver);
 
     // 저장된 전체 기사 통합
     List<Article> allNewlySavedArticles = new ArrayList<>();
@@ -79,6 +81,7 @@ public class ArticleScheduler {
     log.info("알림 생성 이벤트 발행 시작");
 
     if (newlyCreatedArticles.isEmpty()) {
+      log.warn("저장된 기사가 없습니다.");
       return;
     }
 
