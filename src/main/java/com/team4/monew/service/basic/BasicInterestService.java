@@ -70,7 +70,9 @@ public class BasicInterestService implements InterestService {
     int editDistance = distance.apply(s1, s2);
 
     int maxLength = Math.max(s1.length(), s2.length());
-    if (maxLength == 0) return true;
+    if (maxLength == 0) {
+      return true;
+    }
 
     double similarity = 1.0 - ((double) editDistance / maxLength);
     return similarity >= 0.8;
@@ -167,7 +169,8 @@ public class BasicInterestService implements InterestService {
     Interest interest = interestRepository.findById(interestId)
         .orElseThrow(() -> new MonewException(ErrorCode.INTEREST_NOT_FOUND));
 
-    Optional<Subscription> existing = subscriptionRepository.findByUserIdAndInterestId(userId, interestId);
+    Optional<Subscription> existing = subscriptionRepository.findByUserIdAndInterestId(userId,
+        interestId);
     if (existing.isPresent()) {
       return subscriptionMapper.toDto(existing.get());
     }
@@ -175,7 +178,7 @@ public class BasicInterestService implements InterestService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new MonewException(ErrorCode.USER_NOT_FOUND));
 
-    Subscription subscription = new Subscription(UUID.randomUUID(), user, interest);
+    Subscription subscription = new Subscription(user, interest);
     subscriptionRepository.save(subscription);
 
     interest.increaseSubscriberCount();

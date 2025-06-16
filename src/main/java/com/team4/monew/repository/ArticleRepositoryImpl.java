@@ -16,11 +16,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
 
   private static final QArticle article = QArticle.article;
@@ -100,7 +102,7 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
     if (hasNext && !articles.isEmpty()) {
       ArticleDto lastArticle = articles.get(articles.size() - 1);
       nextCursor = generateCursor(lastArticle, request.orderBy());
-      nextAfter = Instant.now();
+      nextAfter = lastArticle.publishDate();
     }
 
     // 전체 개수 조회
@@ -153,40 +155,44 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
         article.publishedDate.loe(publishDateTo) : null;
   }
 
+  private BooleanExpression afterCondition(Instant after) {
+    return after != null ? article.publishedDate.gt(after) : null;
+  }
+
+  // 수정된 cursorCondition 메서드 - after 매개변수 제거
   private BooleanExpression cursorCondition(String cursor, String orderBy, String direction) {
-    if (!StringUtils.hasText(cursor)) {
+//    if (!StringUtils.hasText(cursor)) {
+//      return null;
+//    }
+    if (cursor == null || cursor.isEmpty()) {
       return null;
     }
 
-    try {
-      switch (orderBy) {
-        case "publishDate":
-          Instant cursorDate = Instant.parse(cursor);
-          return "DESC".equalsIgnoreCase(direction)
-              ? article.publishedDate.lt(cursorDate)
-              : article.publishedDate.gt(cursorDate);
+    boolean desc = "DESC".equalsIgnoreCase(direction);
 
-        case "commentCount":
-          Long cursorCommentCount = Long.parseLong(cursor);
-          return "DESC".equalsIgnoreCase(direction)
-              ? article.commentCount.lt(cursorCommentCount)
-              : article.commentCount.gt(cursorCommentCount);
-
-        case "viewCount":
-          Long cursorViewCount = Long.parseLong(cursor);
-          return "DESC".equalsIgnoreCase(direction)
-              ? article.viewCount.lt(cursorViewCount)
-              : article.viewCount.gt(cursorViewCount);
-
-        default:
-          return null;
+    switch (orderBy) {
+      case "commentCount" -> {
+        long cursorVal = Long.parseLong(cursor);
+        return desc
+            ? article.commentCount.lt(cursorVal)
+            : article.commentCount.gt(cursorVal);
       }
-    } catch (Exception e) {
-      return null;
+      case "viewCount" -> {
+        long cursorVal = Long.parseLong(cursor);
+        return desc
+            ? article.viewCount.lt(cursorVal)
+            : article.viewCount.gt(cursorVal);
+      }
+      default -> {
+        Instant defaultVal = Instant.parse(cursor);
+        return desc
+            ? article.publishedDate.lt(defaultVal)
+            : article.publishedDate.gt(defaultVal);
+      }
     }
   }
 
-  // 동적 조건 빌더
+  // 수정된 buildConditions 메서드 - 중복 제거 및 올바른 호출
   private BooleanBuilder buildConditions(
       String keyword,
       UUID interestId,
@@ -221,8 +227,12 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
       builder.and(publishDateToCondition(publishDateTo));
     }
 
-    if (cursorCondition(cursor, orderBy, direction) != null) {
-      builder.and(cursorCondition(cursor, orderBy, direction));
+    BooleanExpression cursorExp = cursorCondition(cursor, orderBy, direction);
+    if (cursorExp != null) {
+      builder.and(cursorExp);
+    } else if (afterCondition(after) != null) {
+      // cursor가 없을 때만 after 조건 적용
+      builder.and(afterCondition(after));
     }
 
     return builder;

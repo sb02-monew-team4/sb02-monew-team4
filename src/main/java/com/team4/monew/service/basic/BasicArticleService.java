@@ -45,7 +45,6 @@ public class BasicArticleService implements ArticleService {
     Article article = articleRepository.findById(articleId)
         .orElseThrow(() -> ArticleNotFoundException.byId(articleId));
 
-
     User user = userRepository.findById(userId)
         .orElseThrow(() -> UserNotFoundException.byId(userId));
 
@@ -108,4 +107,4 @@ public class BasicArticleService implements ArticleService {
     articleRepository.deleteById(articleId);
     log.warn("article ID: {} 삭제 완료", articleId);
   }
-
+}

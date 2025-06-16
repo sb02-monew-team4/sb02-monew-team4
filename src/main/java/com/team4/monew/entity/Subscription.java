@@ -44,10 +44,5 @@ public class Subscription {
     this.user = user;
     this.interest = interest;
   }
-
-  public Subscription(User user, Interest interest) {
-    this.user = user;
-    this.interest = interest;
-  }
 }
 

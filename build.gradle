@@ -54,6 +54,7 @@ dependencies {
     implementation 'software.amazon.awssdk:s3:2.31.7'
 
     // Jackson for JSON serialization
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     // Test
