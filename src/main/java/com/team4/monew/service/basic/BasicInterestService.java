@@ -8,6 +8,7 @@ import com.team4.monew.dto.interest.InterestDto;
 import com.team4.monew.dto.interest.InterestRegisterRequest;
 import com.team4.monew.dto.interest.InterestUpdateRequest;
 import com.team4.monew.dto.interest.SubscriptionDto;
+import com.team4.monew.entity.Article;
 import com.team4.monew.entity.Interest;
 import com.team4.monew.entity.Subscription;
 import com.team4.monew.entity.User;
@@ -20,6 +21,7 @@ import com.team4.monew.repository.SubscriptionRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.InterestService;
 import jakarta.transaction.Transactional;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -167,6 +169,9 @@ public class BasicInterestService implements InterestService {
 
     eventPublisher.publishEvent(new InterestDeletedEvent(userId, interestId));
 
+    for (Article article : new HashSet<>(interest.getArticle())) {
+      article.removeInterest(interest);
+    }
     interestRepository.delete(interest);
   }
 
