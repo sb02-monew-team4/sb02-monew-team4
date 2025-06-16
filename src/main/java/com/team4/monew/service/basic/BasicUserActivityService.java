@@ -63,6 +63,24 @@ public class BasicUserActivityService implements UserActivityService {
     return userActivityMapper.toDto(userActivity);
   }
 
+  @Transactional
+  @Override
+  public void updateUser(User user) {
+    UserDto dto = userMapper.toDto(user);
+    UserActivity userActivity = getUserActivityOrThrow(user.getId());
+    userActivity.updateUser(dto);
+    userActivityRepository.save(userActivity);
+  }
+
+  @Transactional
+  @Override
+  public void delete(UUID userId) {
+    if (!userActivityRepository.existsByUser_Id(userId)) {
+      throw UserActivityNotFoundInMongoException.byUserId(userId);
+    }
+    userActivityRepository.deleteByUser_Id(userId);
+  }
+
   @Override
   public UserActivityDto getByUserId(UUID userId) {
     UserActivity userActivity = getUserActivityOrThrow(userId);

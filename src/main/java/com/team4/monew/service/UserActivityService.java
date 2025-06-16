@@ -12,6 +12,10 @@ public interface UserActivityService {
 
   UserActivityDto create(User user);
 
+  void updateUser(User user);
+
+  void delete(UUID userId);
+
   UserActivityDto getByUserId(UUID userId);
 
   void addRecentComment(UUID userId, Comment comment);
