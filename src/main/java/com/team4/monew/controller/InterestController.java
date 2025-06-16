@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -54,12 +55,12 @@ public class InterestController {
   @GetMapping
   public ResponseEntity<CursorPageResponseInterestDto> getInterests(
       @RequestParam(required = false) String keyword,
-      @RequestParam String orderBy,
-      @RequestParam String direction,
+      @RequestParam(defaultValue = "name") String orderBy,
+      @RequestParam(defaultValue = "ASC") String direction,
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) String after,
-      @RequestParam int limit,
-      HttpServletRequest servletRequest
+      @RequestParam(defaultValue = "10") int limit,
+      @RequestHeader("Monew-Request-User-ID") UUID requesterId
   ) {
 
     if (!orderBy.equals("name") && !orderBy.equals("subscriberCount")) {
@@ -74,10 +75,8 @@ public class InterestController {
       throw new MonewException(ErrorCode.INVALID_LIMIT);
     }
 
-    UUID authenticatedUserId = (UUID) servletRequest.getAttribute("authenticatedUserId");
-
     CursorPageResponseInterestDto response = interestService.getInterests(
-        keyword, orderBy, direction, cursor, after, limit, authenticatedUserId
+        keyword, orderBy, direction, cursor, after, limit, requesterId
     );
     return ResponseEntity.ok(response);
   }

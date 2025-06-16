@@ -46,4 +46,12 @@ public class UserActivity {
     recentArticleViewDtos = new ArrayList<>();
     subscriptionDtos = new ArrayList<>();
   }
+
+  public void updateUser(UserDto userdto) {
+    this.user = userdto;
+  }
+
+  public void updateSubscriptionDtos(List<SubscriptionDto> subscriptiondto) {
+    this.subscriptionDtos = subscriptiondto;
+  }
 }

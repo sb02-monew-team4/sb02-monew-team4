@@ -1,10 +1,15 @@
 package com.team4.monew.service.basic;
 
+import com.team4.monew.asynchronous.event.subscription.InterestDeletedEvent;
+import com.team4.monew.asynchronous.event.subscription.SubscriptionCreatedEvent;
+import com.team4.monew.asynchronous.event.subscription.SubscriptionDeletedEvent;
+import com.team4.monew.asynchronous.event.subscription.SubscriptionUpdatedEvent;
 import com.team4.monew.dto.interest.CursorPageResponseInterestDto;
 import com.team4.monew.dto.interest.InterestDto;
 import com.team4.monew.dto.interest.InterestRegisterRequest;
 import com.team4.monew.dto.interest.InterestUpdateRequest;
 import com.team4.monew.dto.interest.SubscriptionDto;
+import com.team4.monew.entity.Article;
 import com.team4.monew.entity.Interest;
 import com.team4.monew.entity.Subscription;
 import com.team4.monew.entity.User;
@@ -17,12 +22,14 @@ import com.team4.monew.repository.SubscriptionRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.InterestService;
 import jakarta.transaction.Transactional;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.similarity.LevenshteinDistance;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -35,6 +42,7 @@ public class BasicInterestService implements InterestService {
   private final InterestMapper interestMapper;
   private final SubscriptionRepository subscriptionRepository;
   private final SubscriptionMapper subscriptionMapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   @Override
@@ -150,6 +158,8 @@ public class BasicInterestService implements InterestService {
 
     interest.updateKeywords(distinctKeywords);
 
+    eventPublisher.publishEvent(new SubscriptionUpdatedEvent(interestId, distinctKeywords));
+
     return interestMapper.toDto(interest, null);
   }
 
@@ -160,6 +170,11 @@ public class BasicInterestService implements InterestService {
     Interest interest = interestRepository.findById(interestId)
         .orElseThrow(() -> new MonewException(ErrorCode.INTEREST_NOT_FOUND));
 
+    eventPublisher.publishEvent(new InterestDeletedEvent(userId, interestId));
+
+    for (Article article : new HashSet<>(interest.getArticle())) {
+      article.removeInterest(interest);
+    }
     interestRepository.delete(interest);
   }
 
@@ -172,7 +187,9 @@ public class BasicInterestService implements InterestService {
     Optional<Subscription> existing = subscriptionRepository.findByUserIdAndInterestId(userId,
         interestId);
     if (existing.isPresent()) {
-      return subscriptionMapper.toDto(existing.get());
+      Subscription subscription = existing.get();
+      eventPublisher.publishEvent(new SubscriptionCreatedEvent(userId, subscription));
+      return subscriptionMapper.toDto(subscription);
     }
 
     User user = userRepository.findById(userId)
@@ -180,6 +197,8 @@ public class BasicInterestService implements InterestService {
 
     Subscription subscription = new Subscription(user, interest);
     subscriptionRepository.save(subscription);
+
+    eventPublisher.publishEvent(new SubscriptionCreatedEvent(userId, subscription));
 
     interest.increaseSubscriberCount();
 
@@ -194,6 +213,8 @@ public class BasicInterestService implements InterestService {
 
     Subscription subscription = subscriptionRepository.findByUserIdAndInterestId(userId, interestId)
         .orElseThrow(() -> new MonewException(ErrorCode.SUBSCRIPTION_NOT_FOUND));
+
+    eventPublisher.publishEvent(new SubscriptionDeletedEvent(userId, subscription.getId()));
 
     subscriptionRepository.delete(subscription);
 

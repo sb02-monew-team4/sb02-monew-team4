@@ -1,5 +1,9 @@
 package com.team4.monew.service.basic;
 
+import com.team4.monew.asynchronous.event.comment.CommentCreatedEvent;
+import com.team4.monew.asynchronous.event.comment.CommentDeletedEvent;
+import com.team4.monew.asynchronous.event.comment.CommentUpdatedEvent;
+import com.team4.monew.asynchronous.event.commentlike.CommentLikeCreatedEvent;
 import com.team4.monew.asynchronous.event.commentlike.CommentLikeCreatedEventForNotification;
 import com.team4.monew.dto.comment.CommentDto;
 import com.team4.monew.dto.comment.CommentLikeDto;
@@ -62,6 +66,8 @@ public class BasicCommentService implements CommentService {
 
     article.incrementCommentCount();
 
+    eventPublisher.publishEvent(new CommentCreatedEvent(user.getId(), comment));
+
     return commentMapper.toDto(saved, request.userId());
   }
 
@@ -75,6 +81,11 @@ public class BasicCommentService implements CommentService {
       int limit,
       UUID requesterId
   ) {
+    if (limit <= 0) {
+      log.warn("잘못된 댓글 요청: limit={}", limit);
+      throw new MonewException(ErrorCode.INVALID_LIMIT);
+    }
+
     List<Comment> comments = commentRepository.findCommentsByArticleWithCursorPaging(
         articleId, orderBy, direction, cursor, after, limit
     );
@@ -128,12 +139,13 @@ public class BasicCommentService implements CommentService {
     comment.increaseLikeCount();
     commentRepository.save(comment);
 
-    //알림 생성 이벤트 발행
     eventPublisher.publishEvent(new CommentLikeCreatedEventForNotification(
         commentId,
         userId,
         comment.getUser().getId()
     ));
+
+    eventPublisher.publishEvent(new CommentLikeCreatedEvent(userId, like));
 
     return commentLikeMapper.toDto(like);
   }
@@ -149,10 +161,13 @@ public class BasicCommentService implements CommentService {
     CommentLike like = commentLikeRepository.findByCommentAndUser(comment, user)
         .orElseThrow(() -> new MonewException(ErrorCode.COMMENT_LIKE_NOT_ALLOWED));
 
+    eventPublisher.publishEvent(new CommentDeletedEvent(userId, like.getId()));
+
     commentLikeRepository.delete(like);
 
     comment.decreaseLikeCount();
     commentRepository.save(comment);
+
   }
 
   @Override
@@ -166,6 +181,8 @@ public class BasicCommentService implements CommentService {
 
     comment.updateContent(request.content());
     Comment saved = commentRepository.save(comment);
+
+    eventPublisher.publishEvent(new CommentUpdatedEvent(userId, comment));
 
     return commentMapper.toDto(saved, userId);
   }
@@ -202,5 +219,7 @@ public class BasicCommentService implements CommentService {
 
     commentRepository.deleteById(commentId);
     log.info("댓글 삭제 완료: commentId={}, deletedBy={}", commentId, userId);
+
+    eventPublisher.publishEvent(new CommentDeletedEvent(userId, commentId));
   }
 }

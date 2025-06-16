@@ -1,4 +1,4 @@
-package com.team4.monew.asynchronous.event.comment;
+package com.team4.monew.asynchronous.event.subscription;
 
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -6,8 +6,8 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class CommentDeletedEvent {
+public class InterestDeletedEvent {
 
   private final UUID userId;
-  private final UUID commentId;
+  private final UUID interestId;
 }
