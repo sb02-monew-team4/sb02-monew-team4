@@ -81,6 +81,11 @@ public class BasicCommentService implements CommentService {
       int limit,
       UUID requesterId
   ) {
+    if (limit <= 0) {
+      log.warn("잘못된 댓글 요청: limit={}", limit);
+      throw new MonewException(ErrorCode.INVALID_LIMIT);
+    }
+
     List<Comment> comments = commentRepository.findCommentsByArticleWithCursorPaging(
         articleId, orderBy, direction, cursor, after, limit
     );
@@ -134,7 +139,6 @@ public class BasicCommentService implements CommentService {
     comment.increaseLikeCount();
     commentRepository.save(comment);
 
-    //알림 생성 이벤트 발행
     eventPublisher.publishEvent(new CommentLikeCreatedEventForNotification(
         commentId,
         userId,

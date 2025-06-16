@@ -32,6 +32,7 @@ public class InterestRepositoryImpl implements InterestRepositoryCustom {
       String after,
       int limit
   ) {
+
     if (!"name".equals(orderBy) && !"subscriberCount".equals(orderBy)) {
       throw new MonewException(ErrorCode.INVALID_ORDER_BY);
     }
@@ -51,11 +52,12 @@ public class InterestRepositoryImpl implements InterestRepositoryCustom {
           .or(interestKeyword.keyword.containsIgnoreCase(keyword));
     }
 
+    BooleanExpression cursorPredicate = buildCursorPredicate(interest, orderBy, direction, cursor, after);
+
     JPQLQuery<Interest> query = queryFactory
         .selectFrom(interest)
-        .from(interest)
         .leftJoin(interest.keywords, interestKeyword)
-        .where(keywordFilter, buildCursorPredicate(interest, orderBy, direction, cursor, after))
+        .where(keywordFilter, cursorPredicate)
         .orderBy(getOrderSpecifiers(interest, orderBy, direction))
         .limit(limit);
 

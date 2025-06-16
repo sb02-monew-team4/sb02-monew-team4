@@ -8,10 +8,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/comments")
@@ -43,13 +45,17 @@ public class CommentController {
   @GetMapping
   public ResponseEntity<CursorPageResponseCommentDto> getCommentsByArticleWithCursor(
       @RequestParam UUID articleId,
-      @RequestParam String orderBy,
-      @RequestParam String direction,
+      @RequestParam(defaultValue = "createdAt") String orderBy,
+      @RequestParam(defaultValue = "ASC") String direction,
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) String after,
-      @RequestParam int limit,
+      @RequestParam(defaultValue = "10") int limit,
       @RequestHeader("Monew-Request-User-ID") UUID requesterId
   ) {
+
+    log.info("getComments 호출됨 - limit: {}, orderBy: {}, direction: {}, articleId: {}",
+        limit, orderBy, direction, articleId);
+
     if (!orderBy.equals("createdAt") && !orderBy.equals("likeCount")) {
       throw new MonewException(ErrorCode.INVALID_ORDER_BY);
     }
@@ -59,7 +65,8 @@ public class CommentController {
     }
 
     if (limit < 1 || limit > 100) {
-      throw new MonewException(ErrorCode.INVALID_LIMIT);
+      log.warn("잘못된 limit 값 {} -> 기본값 10으로 대체", limit);
+      limit = 10;
     }
 
     CursorPageResponseCommentDto response = commentService.getCommentsByArticleWithCursor(
