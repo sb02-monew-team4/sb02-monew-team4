@@ -40,7 +40,7 @@ public class RssCollectorService {
       URL feedUrl = new URL(rssUrl);
       SyndFeed feed = syndFeedInput.build(new XmlReader(feedUrl));
 
-      return feed.getEntries().stream()
+      List<Article> articles = feed.getEntries().stream()
           .map(entry -> {
             try {
               return convertToArticle(entry, source);
@@ -52,6 +52,10 @@ public class RssCollectorService {
           })
           .filter(Objects::nonNull)
           .collect(Collectors.toList());
+
+      log.info("RSS 수집 완료 - source: {}, 수집된 기사 수: {}", source.getSource(), articles.size());
+
+      return articles;
 
     } catch (Exception e) {
       log.error("{} 수집 실패: {}", source.getSource(), e.getMessage());
