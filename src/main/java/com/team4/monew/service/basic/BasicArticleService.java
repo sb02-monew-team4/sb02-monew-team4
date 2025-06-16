@@ -108,4 +108,4 @@ public class BasicArticleService implements ArticleService {
     articleRepository.deleteById(articleId);
     log.warn("article ID: {} 삭제 완료", articleId);
   }
-
+}
