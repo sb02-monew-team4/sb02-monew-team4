@@ -115,7 +115,14 @@ public class BasicUserActivityService implements UserActivityService {
     UserActivity userActivity = getUserActivityOrThrow(userId);
     List<CommentActivityDto> recentCommentDtos = userActivity.getRecentCommentActivityDtos();
 
-    int idx = recentCommentDtos.indexOf(dto);
+    int idx = -1;
+    for (int i = 0; i < recentCommentDtos.size(); i++) {
+      if (recentCommentDtos.get(i).id().equals(dto.id())) {
+        idx = i;
+        break;
+      }
+    }
+
     if (idx != -1) {
       recentCommentDtos.set(idx, dto);
       userActivityRepository.save(userActivity);
@@ -180,12 +187,27 @@ public class BasicUserActivityService implements UserActivityService {
 
   @Transactional
   @Override
+  public void removeSubscriptionByInterestId(UUID userId, UUID interestId) {
+    UserActivity userActivity = getUserActivityOrThrow(userId);
+    userActivity.getSubscriptionDtos().removeIf(dto -> interestId.equals(dto.interestId()));
+    userActivityRepository.save(userActivity);
+  }
+
+  @Transactional
+  @Override
   public void updateSubscription(UUID userId, Subscription subscription) {
     SubscriptionDto dto = subscriptionMapper.toDto(subscription);
 
     UserActivity userActivity = getUserActivityOrThrow(userId);
     List<SubscriptionDto> subscriptionDtos = userActivity.getSubscriptionDtos();
-    int idx = subscriptionDtos.indexOf(dto);
+    int idx = -1;
+    for (int i = 0; i < subscriptionDtos.size(); i++) {
+      if (subscriptionDtos.get(i).id().equals(dto.id())) {
+        idx = i;
+        break;
+      }
+    }
+
     if (idx != -1) {
       subscriptionDtos.set(idx, dto);
       userActivityRepository.save(userActivity);

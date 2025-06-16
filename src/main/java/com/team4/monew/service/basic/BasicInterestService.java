@@ -1,5 +1,6 @@
 package com.team4.monew.service.basic;
 
+import com.team4.monew.asynchronous.event.subscription.InterestDeletedEvent;
 import com.team4.monew.asynchronous.event.subscription.SubscriptionCreatedEvent;
 import com.team4.monew.asynchronous.event.subscription.SubscriptionDeletedEvent;
 import com.team4.monew.dto.interest.CursorPageResponseInterestDto;
@@ -164,6 +165,8 @@ public class BasicInterestService implements InterestService {
     Interest interest = interestRepository.findById(interestId)
         .orElseThrow(() -> new MonewException(ErrorCode.INTEREST_NOT_FOUND));
 
+    eventPublisher.publishEvent(new InterestDeletedEvent(userId, interestId));
+
     interestRepository.delete(interest);
   }
 
@@ -176,7 +179,9 @@ public class BasicInterestService implements InterestService {
     Optional<Subscription> existing = subscriptionRepository.findByUserIdAndInterestId(userId,
         interestId);
     if (existing.isPresent()) {
-      return subscriptionMapper.toDto(existing.get());
+      Subscription subscription = existing.get();
+      eventPublisher.publishEvent(new SubscriptionCreatedEvent(userId, subscription));
+      return subscriptionMapper.toDto(subscription);
     }
 
     User user = userRepository.findById(userId)
