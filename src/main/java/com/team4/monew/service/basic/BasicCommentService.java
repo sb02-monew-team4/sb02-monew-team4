@@ -1,5 +1,9 @@
 package com.team4.monew.service.basic;
 
+import com.team4.monew.asynchronous.event.comment.CommentCreatedEvent;
+import com.team4.monew.asynchronous.event.comment.CommentDeletedEvent;
+import com.team4.monew.asynchronous.event.comment.CommentUpdatedEvent;
+import com.team4.monew.asynchronous.event.commentlike.CommentLikeCreatedEvent;
 import com.team4.monew.asynchronous.event.commentlike.CommentLikeCreatedEventForNotification;
 import com.team4.monew.dto.comment.CommentDto;
 import com.team4.monew.dto.comment.CommentLikeDto;
@@ -61,6 +65,8 @@ public class BasicCommentService implements CommentService {
     Comment saved = commentRepository.save(comment);
 
     article.incrementCommentCount();
+
+    eventPublisher.publishEvent(new CommentCreatedEvent(user.getId(), comment));
 
     return commentMapper.toDto(saved, request.userId());
   }
@@ -135,6 +141,8 @@ public class BasicCommentService implements CommentService {
         comment.getUser().getId()
     ));
 
+    eventPublisher.publishEvent(new CommentLikeCreatedEvent(userId, like));
+
     return commentLikeMapper.toDto(like);
   }
 
@@ -149,10 +157,13 @@ public class BasicCommentService implements CommentService {
     CommentLike like = commentLikeRepository.findByCommentAndUser(comment, user)
         .orElseThrow(() -> new MonewException(ErrorCode.COMMENT_LIKE_NOT_ALLOWED));
 
+    eventPublisher.publishEvent(new CommentDeletedEvent(userId, like.getId()));
+
     commentLikeRepository.delete(like);
 
     comment.decreaseLikeCount();
     commentRepository.save(comment);
+
   }
 
   @Override
@@ -166,6 +177,8 @@ public class BasicCommentService implements CommentService {
 
     comment.updateContent(request.content());
     Comment saved = commentRepository.save(comment);
+
+    eventPublisher.publishEvent(new CommentUpdatedEvent(userId, comment));
 
     return commentMapper.toDto(saved, userId);
   }
@@ -202,5 +215,7 @@ public class BasicCommentService implements CommentService {
 
     commentRepository.deleteById(commentId);
     log.info("댓글 삭제 완료: commentId={}, deletedBy={}", commentId, userId);
+
+    eventPublisher.publishEvent(new CommentDeletedEvent(userId, commentId));
   }
 }
