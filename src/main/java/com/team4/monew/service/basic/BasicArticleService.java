@@ -41,9 +41,10 @@ public class BasicArticleService implements ArticleService {
   private final KeywordFilterService keywordFilterService;
 
   @Override
-  public ArticleViewDto registerArticleView(UUID newsId, UUID userId) {
-    Article article = articleRepository.findById(newsId)
-        .orElseThrow(() -> ArticleNotFoundException.byId(newsId));
+  public ArticleViewDto registerArticleView(UUID articleId, UUID userId) {
+    Article article = articleRepository.findById(articleId)
+        .orElseThrow(() -> ArticleNotFoundException.byId(articleId));
+
 
     User user = userRepository.findById(userId)
         .orElseThrow(() -> UserNotFoundException.byId(userId));
@@ -94,7 +95,6 @@ public class BasicArticleService implements ArticleService {
     );
   }
 
-
   @Override
   public void softDelete(UUID articleId) {
     Article article = articleRepository.findById(articleId)
@@ -108,4 +108,4 @@ public class BasicArticleService implements ArticleService {
     articleRepository.deleteById(articleId);
     log.warn("article ID: {} 삭제 완료", articleId);
   }
-}
+

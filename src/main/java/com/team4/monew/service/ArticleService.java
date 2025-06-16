@@ -14,11 +14,11 @@ public interface ArticleService {
 
   CursorPageResponseArticleDto getAllArticles(ArticleSearchRequest request, UUID userId);
 
-  List<String> getAllSources();
-
-  ArticleRestoreResultDto restoreArticle(Instant from, Instant to);
-
   void hardDelete(UUID articleId);
 
   void softDelete(UUID articleId);
+
+  List<String> getAllSources();
+
+  ArticleRestoreResultDto restoreArticle(Instant from, Instant to);
 }

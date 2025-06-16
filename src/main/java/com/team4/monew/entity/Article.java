@@ -77,7 +77,7 @@ public class Article {
     this.originalLink = originalLink;
     this.title = title;
     this.publishedDate = publishedDate;
-    this.summary = summary;
+    this.summary = (summary.length() > 140) ? summary.substring(0, 140) : summary;
   }
 
   public void addInterest(Interest interest) {

@@ -13,7 +13,7 @@ public record ArticleSearchRequest(
     @Size(max = 100, message = "키워드는 100자를 초과할 수 없습니다")
     String keyword,
     UUID interestId,
-    List<String> SourceIn,
+    List<String> sourceIn,
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     Instant publishDateFrom,

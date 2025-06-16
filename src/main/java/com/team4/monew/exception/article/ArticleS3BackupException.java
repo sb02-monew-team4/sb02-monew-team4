@@ -19,5 +19,4 @@ public class ArticleS3BackupException extends ArticleException {
   public static ArticleS3BackupException serializationFailed() {
     return new ArticleS3BackupException(ErrorCode.ARTICLE_SERIALIZATION_FAIL);
   }
-
 }
