@@ -8,11 +8,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -115,33 +112,5 @@ public class ArticleController {
   public ResponseEntity<Void> hardDelete(@PathVariable UUID articleId) {
     articleService.hardDelete(articleId);
     return ResponseEntity.noContent().build();
-  }
-
-  private LocalDateTime parseFromDate(String date, DateTimeFormatter formatter) {
-    if (date == null || date.isBlank()) {
-      return null;
-    }
-
-    try {
-      LocalDate localDate = LocalDate.parse(date, formatter);
-      return localDate.atStartOfDay(); // 00:00:00
-    } catch (DateTimeParseException e) {
-      log.warn("파싱 실패: {}, 에러 메시지: {}", date, e.getMessage());
-      return null;
-    }
-  }
-
-  private LocalDateTime parseToDate(String date, DateTimeFormatter formatter) {
-    if (date == null || date.isBlank()) {
-      return null;
-    }
-
-    try {
-      LocalDate localDate = LocalDate.parse(date, formatter);
-      return localDate.atTime(23, 59, 59); // 23:59:59
-    } catch (DateTimeParseException e) {
-      log.warn("파싱 실패: {}, 에러 메시지: {}", date, e.getMessage());
-      return null;
-    }
   }
 }
