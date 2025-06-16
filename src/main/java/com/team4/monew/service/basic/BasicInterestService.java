@@ -176,7 +176,9 @@ public class BasicInterestService implements InterestService {
     Optional<Subscription> existing = subscriptionRepository.findByUserIdAndInterestId(userId,
         interestId);
     if (existing.isPresent()) {
-      return subscriptionMapper.toDto(existing.get());
+      Subscription subscription = existing.get();
+      eventPublisher.publishEvent(new SubscriptionCreatedEvent(userId, subscription));
+      return subscriptionMapper.toDto(subscription);
     }
 
     User user = userRepository.findById(userId)
