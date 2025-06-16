@@ -7,6 +7,7 @@ import com.team4.monew.asynchronous.event.comment.CommentDeletedEvent;
 import com.team4.monew.asynchronous.event.comment.CommentUpdatedEvent;
 import com.team4.monew.asynchronous.event.commentlike.CommentLikeCreatedEvent;
 import com.team4.monew.asynchronous.event.commentlike.CommentLikeDeletedEvent;
+import com.team4.monew.asynchronous.event.subscription.InterestDeletedEvent;
 import com.team4.monew.asynchronous.event.subscription.SubscriptionCreatedEvent;
 import com.team4.monew.asynchronous.event.subscription.SubscriptionDeletedEvent;
 import com.team4.monew.asynchronous.event.subscription.SubscriptionUpdatedEvent;
@@ -63,6 +64,12 @@ public class UserActivityEventHandler {
   @EventListener
   public void handleSubscriptionDeleted(SubscriptionDeletedEvent event) {
     userActivityService.removeSubscription(event.getUserId(), event.getSubscriptionId());
+  }
+
+  @Async
+  @EventListener
+  public void handleSubscriptionDeletedByInterest(InterestDeletedEvent event) {
+    userActivityService.removeSubscriptionByInterestId(event.getUserId(), event.getInterestId());
   }
 
   @Async

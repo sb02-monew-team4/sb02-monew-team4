@@ -187,6 +187,14 @@ public class BasicUserActivityService implements UserActivityService {
 
   @Transactional
   @Override
+  public void removeSubscriptionByInterestId(UUID userId, UUID interestId) {
+    UserActivity userActivity = getUserActivityOrThrow(userId);
+    userActivity.getSubscriptionDtos().removeIf(dto -> interestId.equals(dto.interestId()));
+    userActivityRepository.save(userActivity);
+  }
+
+  @Transactional
+  @Override
   public void updateSubscription(UUID userId, Subscription subscription) {
     SubscriptionDto dto = subscriptionMapper.toDto(subscription);
 

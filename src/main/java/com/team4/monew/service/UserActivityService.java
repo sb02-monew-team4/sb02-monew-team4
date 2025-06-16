@@ -36,6 +36,8 @@ public interface UserActivityService {
 
   void removeSubscription(UUID userId, UUID subscriptionId);
 
+  void removeSubscriptionByInterestId(UUID userId, UUID interestId);
+
   void updateSubscription(UUID userId, Subscription subscription);
 
   void syncUserActivity(UUID userId);
