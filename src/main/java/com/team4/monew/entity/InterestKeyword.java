@@ -13,10 +13,12 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "interest_keywords")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class InterestKeyword {
@@ -36,4 +38,9 @@ public class InterestKeyword {
     this.interest = interest;
     this.keyword = keyword;
   }
+
+  public InterestKeyword(String keyword) {
+    this.keyword = keyword;
+  }
+
 }

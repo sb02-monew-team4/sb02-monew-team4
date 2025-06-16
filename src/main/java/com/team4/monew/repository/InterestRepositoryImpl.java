@@ -48,7 +48,7 @@ public class InterestRepositoryImpl implements InterestRepositoryCustom {
     BooleanExpression keywordFilter = null;
     if (keyword != null && !keyword.isBlank()) {
       keywordFilter = interest.name.containsIgnoreCase(keyword)
-      .or(interestKeyword.keyword.containsIgnoreCase(keyword));
+          .or(interestKeyword.keyword.containsIgnoreCase(keyword));
     }
 
     JPQLQuery<Interest> query = queryFactory
@@ -109,5 +109,29 @@ public class InterestRepositoryImpl implements InterestRepositoryCustom {
       default:
         throw new MonewException(ErrorCode.INVALID_ORDER_BY);
     }
+  }
+
+  @Override
+  public long countByKeyword(String keyword) {
+    QInterest interest = QInterest.interest;
+    QInterestKeyword interestKeyword = QInterestKeyword.interestKeyword;
+
+    BooleanExpression predicate = null;
+    if (keyword != null && !keyword.isBlank()) {
+      predicate = interest.name.containsIgnoreCase(keyword)
+          .or(interestKeyword.keyword.containsIgnoreCase(keyword));
+    }
+
+    JPQLQuery<Long> query = queryFactory
+        .select(interest.countDistinct())
+        .from(interest)
+        .leftJoin(interest.keywords, interestKeyword);
+
+    if (predicate != null) {
+      query.where(predicate);
+    }
+
+    Long result = query.fetchOne();
+    return result != null ? result : 0L;
   }
 }
