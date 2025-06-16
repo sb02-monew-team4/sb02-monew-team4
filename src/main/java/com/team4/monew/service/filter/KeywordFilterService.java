@@ -49,8 +49,22 @@ public class KeywordFilterService {
     String title = article.getTitle().toLowerCase();
     String summary = article.getSummary().toLowerCase();
 
-    return keywords.stream()
-        .anyMatch(keyword -> title.contains(keyword) || summary.contains(keyword));
+    boolean matched = false;
+
+    for (String keyword : keywords) {
+      boolean titleContains = title.contains(keyword);
+      boolean summaryContains = summary.contains(keyword);
+
+      if (titleContains || summaryContains) {
+        log.debug("매칭 키워드 발견: '{}', [{}] {}, 요약: {}", keyword, article.getSource(), title, summary);
+        matched = true;
+      }
+
+      if (!matched) {
+        log.debug("매칭 키워드 없음: [{}] {}, 요약: {}", article.getSource(), title, summary);
+      }
+    }
+    return matched;
   }
 
   // Article 에 매칭되는 interest 들을 연관관계로 설정
@@ -67,7 +81,7 @@ public class KeywordFilterService {
     // Article에 Interest 연관관계 설정 (양방향 동기화)
     matchingInterests.forEach(article::addInterest);
 
-    log.debug("기사 {}: {}개 관심사와 연결", article.getTitle(), matchingInterests.size());
+    log.debug("[{}] 기사 {}: {}개 관심사와 연결", article.getSource(), article.getTitle(), matchingInterests.size());
 
     return article;
   }
