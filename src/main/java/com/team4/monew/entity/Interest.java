@@ -19,7 +19,6 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -27,7 +26,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(name = "interests")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
@@ -65,20 +63,6 @@ public class Interest {
     this.subscriberCount = 0L;
   }
 
-  public Interest(UUID id, String name, Long subscriberCount,
-      Instant createdAt, Instant updatedAt,
-      List<InterestKeyword> keywords, Set<Article> article) {
-    this.id = id;
-    this.name = name;
-    this.subscriberCount = subscriberCount;
-    this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
-    this.keywords = keywords;
-    this.subscriptions = new ArrayList<>();
-    this.article = article;
-  }
-
-
   public void updateKeywords(List<String> newKeywords) {
     this.keywords.clear();
 
@@ -95,10 +79,5 @@ public class Interest {
     if (subscriberCount > 0) {
       subscriberCount--;
     }
-  }
-
-  public void addKeyword(InterestKeyword keyword) {
-    this.keywords.add(keyword);
-    keyword.setInterest(this);
   }
 }

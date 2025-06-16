@@ -20,6 +20,7 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   data:
     mongodb:
+      uri: ${MONGODB_URI}
       host: localhost
       port: 27017
       database: monew-db
@@ -39,4 +40,5 @@ logging:
 backup:
   s3:
     bucket: ${AWS_S3_BUCKET}
+
 

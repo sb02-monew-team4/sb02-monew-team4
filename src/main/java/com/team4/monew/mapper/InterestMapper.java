@@ -12,30 +12,18 @@ import java.util.UUID;
 @Mapper(componentModel = "spring")
 public interface InterestMapper {
 
-  @Mapping(target = "name", source = "name")
   @Mapping(target = "subscribedByMe", expression = "java(isSubscribed(interest, requesterId))")
   @Mapping(target = "keywords", expression = "java(interestKeywordsToStrings(interest.getKeywords()))")
   InterestDto toDto(Interest interest, @Context UUID requesterId);
 
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "subscriberCount", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "subscriptions", ignore = true)
-  @Mapping(target = "article", ignore = true)
-  @Mapping(target = "keywords", ignore = true)
+  @Mapping(target = "keywords", expression = "java(stringsToInterestKeywords(request.keywords()))")
   Interest toEntity(InterestRegisterRequest request);
 
-  @AfterMapping
-  default void connectKeywordsToInterest(
-      @MappingTarget Interest interest,
-      InterestRegisterRequest request
-  ) {
-    if (request.keywords() != null && !request.keywords().isEmpty()) {
-      for (String keyword : request.keywords()) {
-        interest.addKeyword(new InterestKeyword(interest, keyword));
-      }
-    }
+  default List<InterestKeyword> stringsToInterestKeywords(List<String> keywordStrings) {
+    if (keywordStrings == null) return null;
+    return keywordStrings.stream()
+        .map(k -> new InterestKeyword(null, null, k))
+        .toList();
   }
 
   default List<String> interestKeywordsToStrings(List<InterestKeyword> keywordEntities) {

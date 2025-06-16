@@ -43,13 +43,18 @@ public class RssCollectorService {
     }
   }
 
+  // summary 길이 150 넘으면 substring 하도록 수정
   private Article convertToArticle(SyndEntry entry, ArticleSource source) {
+    String summary = entry.getDescription().getValue();
+    if (summary.length() > 150) {
+      summary = summary.substring(0, 150);
+    }
     return new Article(
         source.getSource(),
         entry.getLink(),
         entry.getTitle(),
         entry.getPublishedDate().toInstant(),
-        entry.getDescription().getValue()
+        summary
     );
   }
 

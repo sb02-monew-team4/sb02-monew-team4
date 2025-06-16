@@ -91,7 +91,7 @@ public class KeywordFilterServiceTest {
   private Interest createInterest(String name, List<String> keywords) {
     Interest interest = new Interest(
         UUID.randomUUID(), name, 0L, Instant.now(), Instant.now(),
-        new ArrayList<>(), new HashSet<>()
+        new ArrayList<>(), new ArrayList<>(), new HashSet<>()
     );
 
     List<InterestKeyword> keywordEntities = keywords.stream()

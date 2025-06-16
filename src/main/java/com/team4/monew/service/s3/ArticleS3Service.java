@@ -193,4 +193,3 @@ public class ArticleS3Service {
         now.format(formatter),
         now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss")));
   }
-}

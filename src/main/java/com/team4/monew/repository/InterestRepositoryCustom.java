@@ -12,6 +12,4 @@ public interface InterestRepositoryCustom {
       String after,
       int limit
   );
-
-  long countByKeyword(String keyword);
 }
