@@ -7,11 +7,12 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team4.monew.dto.article.ArticleDto;
-import com.team4.monew.dto.article.ArticleSearchRequest;
 import com.team4.monew.dto.article.CursorPageResponseArticleDto;
 import com.team4.monew.entity.QArticle;
 import com.team4.monew.entity.QInterest;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -32,7 +33,16 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
 
   @Override
   public CursorPageResponseArticleDto findArticlesWithCursor(
-      ArticleSearchRequest request,
+      String keyword,
+      UUID interestId,
+      List<String> sourceIn,
+      Instant publishDateFrom,
+      Instant publishDateTo,
+      String orderBy,
+      String direction,
+      String cursor,
+      int limit,
+      Instant after,
       UUID userId) {
 
     // 동적 쿼리 실행
@@ -50,68 +60,37 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
         ))
         .from(article)
         .leftJoin(article.interest, interest)
-        .where(
-            buildConditions(
-                request.keyword(),
-                request.interestId(),
-                request.sourceIn(),
-                request.publishDateFrom(),
-                request.publishDateTo(),
-                request.cursor(),
-                request.after(),
-                request.orderBy(),
-                request.direction())
-        )
-        .orderBy(getOrderSpecifier(request.orderBy(), request.direction()))
-        .limit(request.limit() + 1)
+        .where(buildConditions(keyword,
+            interestId,
+            sourceIn,
+            publishDateFrom,
+            publishDateTo,
+            cursor,
+            after,
+            orderBy,
+            direction))
+        .orderBy(getOrderSpecifier(orderBy, direction))
+        .limit(limit + 1)
         .fetch();
 
-    // hasNext 확인 및 viewedByMe 설정
-    boolean hasNext = articles.size() > request.limit();
+    // hasNext 확인
+    boolean hasNext = articles.size() > limit;
     if (hasNext) {
-      articles = articles.subList(0, request.limit());
+      articles = articles.subList(0, limit);
     }
 
-    // 사용자 조회 이력 확인
-    if (!articles.isEmpty()) {
-      List<UUID> articleIds = articles.stream()
-          .map(ArticleDto::id)
-          .toList();
-
-      Set<UUID> viewedArticleIds = articleViewRepository
-          .findViewedArticleIdsByUserIdAndArticleIds(userId, articleIds);
-
-      articles = articles.stream()
-          .map(dto -> new ArticleDto(
-              dto.id(),
-              dto.source(),
-              dto.sourceUrl(),
-              dto.title(),
-              dto.publishDate(),
-              dto.summary(),
-              dto.commentCount(),
-              dto.viewCount(),
-              viewedArticleIds.contains(dto.id())
-          ))
-          .toList();
-    }
-
-    // 다음 커서 생성
+    // 다음 커서 및 after 생성
     String nextCursor = null;
     Instant nextAfter = null;
     if (hasNext && !articles.isEmpty()) {
       ArticleDto lastArticle = articles.get(articles.size() - 1);
-      nextCursor = generateCursor(lastArticle, request.orderBy());
+      nextCursor = generateCursor(lastArticle, orderBy);
       nextAfter = lastArticle.publishDate();
     }
 
     // 전체 개수 조회
     long totalElements = countArticlesWithConditions(
-        request.keyword(),
-        request.interestId(),
-        request.sourceIn(),
-        request.publishDateFrom(),
-        request.publishDateTo());
+        keyword, interestId, sourceIn, publishDateFrom, publishDateTo);
 
     return new CursorPageResponseArticleDto(
         articles,
@@ -123,7 +102,74 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
     );
   }
 
-  // BooleanExpression을 활용한 조건 메서드들
+  private List<ArticleDto> setViewedByMe(List<ArticleDto> articles, UUID userId) {
+    if (articles.isEmpty() || userId == null) {
+      return articles;
+    }
+
+    List<UUID> articleIds = articles.stream()
+        .map(ArticleDto::id)
+        .toList();
+
+    Set<UUID> viewedArticleIds = articleViewRepository
+        .findViewedArticleIdsByUserIdAndArticleIds(userId, articleIds);
+
+    return articles.stream()
+        .map(dto -> new ArticleDto(
+            dto.id(),
+            dto.source(),
+            dto.sourceUrl(),
+            dto.title(),
+            dto.publishDate(),
+            dto.summary(),
+            dto.commentCount(),
+            dto.viewCount(),
+            viewedArticleIds.contains(dto.id())
+        ))
+        .toList();
+  }
+
+  private BooleanBuilder buildConditions(
+      String keyword,
+      UUID interestId,
+      List<String> sourceIn,
+      Instant publishDateFrom,
+      Instant publishDateTo,
+      String cursor,
+      Instant after,
+      String orderBy,
+      String direction) {
+
+    BooleanBuilder builder = new BooleanBuilder();
+
+    // 기본 조건
+    builder.and(isNotDeleted());
+
+    // 선택적 조건들
+    addConditionIfNotNull(builder, keywordCondition(keyword));
+    addConditionIfNotNull(builder, interestCondition(interestId));
+    addConditionIfNotNull(builder, sourceCondition(sourceIn));
+    addConditionIfNotNull(builder, publishDateFromCondition(publishDateFrom));
+    addConditionIfNotNull(builder, publishDateToCondition(publishDateTo));
+
+    // 커서 또는 after 조건
+    BooleanExpression cursorExp = cursorCondition(cursor, orderBy, direction);
+    if (cursorExp != null) {
+      builder.and(cursorExp);
+    } else {
+      addConditionIfNotNull(builder, afterCondition(after));
+    }
+
+    return builder;
+  }
+
+  private void addConditionIfNotNull(BooleanBuilder builder, BooleanExpression condition) {
+    if (condition != null) {
+      builder.and(condition);
+    }
+  }
+
+  // BooleanExpression 조건 메서드들
   private BooleanExpression isNotDeleted() {
     return article.isDeleted.eq(false);
   }
@@ -159,111 +205,61 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
     return after != null ? article.publishedDate.gt(after) : null;
   }
 
-  // 수정된 cursorCondition 메서드 - after 매개변수 제거
   private BooleanExpression cursorCondition(String cursor, String orderBy, String direction) {
-//    if (!StringUtils.hasText(cursor)) {
-//      return null;
-//    }
-    if (cursor == null || cursor.isEmpty()) {
+    if (!StringUtils.hasText(cursor)) {
       return null;
     }
 
-    boolean desc = "DESC".equalsIgnoreCase(direction);
+    try {
+      boolean desc = "DESC".equalsIgnoreCase(direction);
 
-    switch (orderBy) {
-      case "commentCount" -> {
-        long cursorVal = Long.parseLong(cursor);
-        return desc
-            ? article.commentCount.lt(cursorVal)
-            : article.commentCount.gt(cursorVal);
-      }
-      case "viewCount" -> {
-        long cursorVal = Long.parseLong(cursor);
-        return desc
-            ? article.viewCount.lt(cursorVal)
-            : article.viewCount.gt(cursorVal);
-      }
-      default -> {
-        Instant defaultVal = Instant.parse(cursor);
-        return desc
-            ? article.publishedDate.lt(defaultVal)
-            : article.publishedDate.gt(defaultVal);
-      }
+      return switch (orderBy) {
+        case "commentCount" -> {
+          long cursorVal = Long.parseLong(cursor);
+          yield desc
+              ? article.commentCount.lt(cursorVal)
+              : article.commentCount.gt(cursorVal);
+        }
+        case "viewCount" -> {
+          long cursorVal = Long.parseLong(cursor);
+          yield desc
+              ? article.viewCount.lt(cursorVal)
+              : article.viewCount.gt(cursorVal);
+        }
+        default -> {
+          LocalDateTime cursorDateTime = LocalDateTime.parse(cursor);
+          yield desc
+              ? article.publishedDate.lt(Instant.from(cursorDateTime))
+              : article.publishedDate.gt(Instant.from(cursorDateTime));
+        }
+      };
+    } catch (DateTimeParseException | NumberFormatException e) {
+      log.warn("커서 파싱 실패: cursor={}, orderBy={}", cursor, orderBy, e);
+      return null;
     }
   }
 
-  // 수정된 buildConditions 메서드 - 중복 제거 및 올바른 호출
-  private BooleanBuilder buildConditions(
-      String keyword,
-      UUID interestId,
-      List<String> sourceIn,
-      Instant publishDateFrom,
-      Instant publishDateTo,
-      String cursor,
-      Instant after,
-      String orderBy,
-      String direction) {
-
-    BooleanBuilder builder = new BooleanBuilder();
-    builder.and(isNotDeleted());
-
-    if (keywordCondition(keyword) != null) {
-      builder.and(keywordCondition(keyword));
-    }
-
-    if (interestCondition(interestId) != null) {
-      builder.and(interestCondition(interestId));
-    }
-
-    if (sourceCondition(sourceIn) != null) {
-      builder.and(sourceCondition(sourceIn));
-    }
-
-    if (publishDateFromCondition(publishDateFrom) != null) {
-      builder.and(publishDateFromCondition(publishDateFrom));
-    }
-
-    if (publishDateToCondition(publishDateTo) != null) {
-      builder.and(publishDateToCondition(publishDateTo));
-    }
-
-    BooleanExpression cursorExp = cursorCondition(cursor, orderBy, direction);
-    if (cursorExp != null) {
-      builder.and(cursorExp);
-    } else if (afterCondition(after) != null) {
-      // cursor가 없을 때만 after 조건 적용
-      builder.and(afterCondition(after));
-    }
-
-    return builder;
-  }
-
-  // 정렬 조건 생성
   private OrderSpecifier<?> getOrderSpecifier(String orderBy, String direction) {
     boolean isDesc = "DESC".equalsIgnoreCase(direction);
 
-    switch (orderBy) {
-      case "commentCount":
-        return isDesc ? article.commentCount.desc() : article.commentCount.asc();
-      case "viewCount":
-        return isDesc ? article.viewCount.desc() : article.viewCount.asc();
-      case "publishDate":
-      default:
-        return isDesc ? article.publishedDate.desc() : article.publishedDate.asc();
-    }
+    return switch (orderBy) {
+      case "commentCount" -> isDesc ?
+          article.commentCount.desc() : article.commentCount.asc();
+      case "viewCount" -> isDesc ?
+          article.viewCount.desc() : article.viewCount.asc();
+      case "publishDate" -> isDesc ?
+          article.publishedDate.desc() : article.publishedDate.asc();
+      default -> article.publishedDate.desc(); // 기본값
+    };
   }
 
-  // 커서 생성
   private String generateCursor(ArticleDto articleDto, String orderBy) {
-    switch (orderBy) {
-      case "commentCount":
-        return String.valueOf(articleDto.commentCount());
-      case "viewCount":
-        return String.valueOf(articleDto.viewCount());
-      case "publishDate":
-      default:
-        return articleDto.publishDate().toString();
-    }
+    return switch (orderBy) {
+      case "commentCount" -> String.valueOf(articleDto.commentCount());
+      case "viewCount" -> String.valueOf(articleDto.viewCount());
+      case "publishDate" -> articleDto.publishDate().toString();
+      default -> articleDto.publishDate().toString();
+    };
   }
 
   @Override
@@ -274,7 +270,7 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
       Instant publishDateFrom,
       Instant publishDateTo) {
 
-    Long nullableCount = queryFactory
+    Long count = queryFactory
         .select(article.count())
         .from(article)
         .leftJoin(article.interest, interest)
@@ -288,6 +284,6 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
         )
         .fetchOne();
 
-    return nullableCount != null ? nullableCount : 0L;
+    return count != null ? count : 0L;
   }
 }

@@ -1,20 +1,27 @@
 package com.team4.monew.controller;
 
 import com.team4.monew.dto.article.ArticleRestoreResultDto;
-import com.team4.monew.dto.article.ArticleSearchRequest;
 import com.team4.monew.dto.article.ArticleViewDto;
 import com.team4.monew.dto.article.CursorPageResponseArticleDto;
 import com.team4.monew.service.ArticleService;
-import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -25,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping
+@Slf4j
 public class ArticleController {
 
   private final ArticleService articleService;
@@ -42,10 +50,35 @@ public class ArticleController {
   @Transactional
   @GetMapping("/api/articles")
   public ResponseEntity<CursorPageResponseArticleDto> getArticles(
-      @Valid @ModelAttribute ArticleSearchRequest request,
-      @RequestHeader("Monew-Request-User-ID") UUID userId
+      @RequestParam(required = false) String keyword,
+      @RequestParam(required = false) UUID interestId,
+      @RequestParam(required = false) List<String> sourceIn,
+      @RequestParam(required = false)
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate publishDateFrom,
+      @RequestParam(required = false)
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate publishDateTo,
+      @RequestParam(defaultValue = "publishDate") String orderBy,
+      @RequestParam(defaultValue = "DESC") String direction,
+      @RequestParam(required = false) String cursor,
+      @RequestParam(defaultValue = "20") @Min(1) @Max(50) int limit,
+      @RequestParam(required = false)
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant after,
+      @RequestHeader(value = "Monew-Request-User-ID", required = false) UUID userId
   ) {
-    CursorPageResponseArticleDto response = articleService.getAllArticles(request, userId);
+    Instant fromInstant = (publishDateFrom != null)
+        ? publishDateFrom.atStartOfDay(ZoneOffset.UTC).toInstant()
+        : null;
+    Instant toInstant = (publishDateTo != null)
+        ? publishDateTo.atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC).toInstant()
+        : null;
+
+    CursorPageResponseArticleDto response = articleService.getAllArticles(
+        keyword, interestId, sourceIn,
+        fromInstant, toInstant,
+        orderBy, direction,
+        cursor, limit,
+        after, userId
+    );
 
     return ResponseEntity.ok(response);
   }
@@ -84,5 +117,31 @@ public class ArticleController {
     return ResponseEntity.noContent().build();
   }
 
+  private LocalDateTime parseFromDate(String date, DateTimeFormatter formatter) {
+    if (date == null || date.isBlank()) {
+      return null;
+    }
 
+    try {
+      LocalDate localDate = LocalDate.parse(date, formatter);
+      return localDate.atStartOfDay(); // 00:00:00
+    } catch (DateTimeParseException e) {
+      log.warn("파싱 실패: {}, 에러 메시지: {}", date, e.getMessage());
+      return null;
+    }
+  }
+
+  private LocalDateTime parseToDate(String date, DateTimeFormatter formatter) {
+    if (date == null || date.isBlank()) {
+      return null;
+    }
+
+    try {
+      LocalDate localDate = LocalDate.parse(date, formatter);
+      return localDate.atTime(23, 59, 59); // 23:59:59
+    } catch (DateTimeParseException e) {
+      log.warn("파싱 실패: {}, 에러 메시지: {}", date, e.getMessage());
+      return null;
+    }
+  }
 }
