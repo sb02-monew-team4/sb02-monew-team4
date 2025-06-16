@@ -1,6 +1,6 @@
 package com.team4.monew.asynchronous.event.subscription;
 
-import com.team4.monew.entity.Subscription;
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,6 +8,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class SubscriptionUpdatedEvent {
-  private final UUID userId;
-  private final Subscription subscription;
+
+  private final UUID interestId;
+  private final List<String> newKeywords;
 }

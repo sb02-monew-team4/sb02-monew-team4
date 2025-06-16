@@ -72,6 +72,9 @@ dependencies {
     // env 파일의 CLIENT_ID, CLIENT_SECRET 읽어오기 위한 라이브러리
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 
+    // env 파일 자동 로딩을 위한 라이브러라
+    implementation 'me.paulschwarz:spring-dotenv:3.0.0'
+
     // Levenshtein
     implementation 'org.apache.commons:commons-text:1.10.0'
 }

@@ -75,7 +75,7 @@ public class UserActivityEventHandler {
   @Async
   @EventListener
   public void handleSubscriptionUpdated(SubscriptionUpdatedEvent event) {
-    userActivityService.updateSubscription(event.getUserId(), event.getSubscription());
+    userActivityService.updateSubscriptionKeywords(event.getInterestId(), event.getNewKeywords());
   }
 
   @Async
