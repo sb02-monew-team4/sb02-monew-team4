@@ -7,8 +7,7 @@ import com.team4.monew.service.ArticleService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
@@ -51,9 +50,9 @@ public class ArticleController {
       @RequestParam(required = false) UUID interestId,
       @RequestParam(required = false) List<String> sourceIn,
       @RequestParam(required = false)
-      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate publishDateFrom,
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime publishDateFrom,
       @RequestParam(required = false)
-      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate publishDateTo,
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime publishDateTo,
       @RequestParam(defaultValue = "publishDate") String orderBy,
       @RequestParam(defaultValue = "DESC") String direction,
       @RequestParam(required = false) String cursor,
@@ -63,10 +62,11 @@ public class ArticleController {
       @RequestHeader(value = "Monew-Request-User-ID", required = false) UUID userId
   ) {
     Instant fromInstant = (publishDateFrom != null)
-        ? publishDateFrom.atStartOfDay(ZoneOffset.UTC).toInstant()
+        ? publishDateFrom.atZone(ZoneOffset.UTC).toInstant()
         : null;
+
     Instant toInstant = (publishDateTo != null)
-        ? publishDateTo.atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC).toInstant()
+        ? publishDateTo.atZone(ZoneOffset.UTC).toInstant()
         : null;
 
     CursorPageResponseArticleDto response = articleService.getAllArticles(
