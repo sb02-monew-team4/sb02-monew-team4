@@ -7,6 +7,7 @@ import com.team4.monew.asynchronous.event.comment.CommentDeletedEvent;
 import com.team4.monew.asynchronous.event.comment.CommentUpdatedEvent;
 import com.team4.monew.asynchronous.event.commentlike.CommentLikeCreatedEvent;
 import com.team4.monew.asynchronous.event.commentlike.CommentLikeDeletedEvent;
+import com.team4.monew.asynchronous.event.subscription.InterestDeletedEvent;
 import com.team4.monew.asynchronous.event.subscription.SubscriptionCreatedEvent;
 import com.team4.monew.asynchronous.event.subscription.SubscriptionDeletedEvent;
 import com.team4.monew.asynchronous.event.subscription.SubscriptionUpdatedEvent;
@@ -31,7 +32,7 @@ public class UserActivityEventHandler {
   @Async
   @EventListener
   public void handleCommentDeleted(CommentDeletedEvent event) {
-    userActivityService.removeRecentComment(event.getUserId(), event.getComment());
+    userActivityService.removeRecentComment(event.getUserId(), event.getCommentId());
   }
 
   @Async
@@ -50,7 +51,7 @@ public class UserActivityEventHandler {
   @Async
   @EventListener
   public void handleCommentLikeDeleted(CommentLikeDeletedEvent event) {
-    userActivityService.removeCommentLike(event.getUserId(), event.getCommentLike());
+    userActivityService.removeCommentLike(event.getUserId(), event.getCommentLikeId());
   }
 
   @Async
@@ -62,13 +63,19 @@ public class UserActivityEventHandler {
   @Async
   @EventListener
   public void handleSubscriptionDeleted(SubscriptionDeletedEvent event) {
-    userActivityService.removeSubscription(event.getUserId(), event.getSubscription());
+    userActivityService.removeSubscription(event.getUserId(), event.getSubscriptionId());
+  }
+
+  @Async
+  @EventListener
+  public void handleSubscriptionDeletedByInterest(InterestDeletedEvent event) {
+    userActivityService.removeSubscriptionByInterestId(event.getUserId(), event.getInterestId());
   }
 
   @Async
   @EventListener
   public void handleSubscriptionUpdated(SubscriptionUpdatedEvent event) {
-    userActivityService.updateSubscription(event.getUserId(), event.getSubscription());
+    userActivityService.updateSubscriptionKeywords(event.getInterestId(), event.getNewKeywords());
   }
 
   @Async
@@ -80,7 +87,7 @@ public class UserActivityEventHandler {
   @Async
   @EventListener
   public void handleArticleViewDeleted(ArticleViewDeletedEvent event) {
-    userActivityService.removeRecentArticleView(event.getUserId(), event.getArticleView());
+    userActivityService.removeRecentArticleView(event.getUserId(), event.getArticleId());
   }
 }
 

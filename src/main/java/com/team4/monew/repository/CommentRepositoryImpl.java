@@ -1,5 +1,6 @@
 package com.team4.monew.repository;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
@@ -32,6 +33,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
       String after,
       int limit
   ) {
+
     if (!"likeCount".equals(orderBy) && !"createdAt".equals(orderBy)) {
       throw new MonewException(ErrorCode.INVALID_ORDER_BY);
     }
@@ -46,66 +48,54 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
 
     QComment comment = QComment.comment;
 
-    if (!"likeCount".equals(orderBy) && !"createdAt".equals(orderBy)) {
-      throw new MonewException(ErrorCode.INVALID_ORDER_BY);
-    }
-
     Order sortOrder = "desc".equalsIgnoreCase(direction) ? Order.DESC : Order.ASC;
 
-    var query = queryFactory
-        .selectFrom(comment)
-        .where(comment.article.id.eq(articleId), comment.isDeleted.eq(false))
-        .limit(limit);
+    BooleanExpression baseCondition = comment.article.id.eq(articleId)
+        .and(comment.isDeleted.eq(false));
 
-    if ("likeCount".equals(orderBy)) {
-      query.orderBy(
-          new OrderSpecifier<>(sortOrder, comment.likeCount),
-          new OrderSpecifier<>(sortOrder, comment.createdAt),
-          new OrderSpecifier<>(sortOrder, comment.id)
-      );
+    BooleanExpression cursorCondition = null;
 
-      if (cursor != null && after != null) {
-        try {
+    try {
+      if ("likeCount".equals(orderBy)) {
+        if (cursor != null && after != null) {
           Long likeCursor = Long.parseLong(cursor);
           Instant afterTime = Instant.parse(after);
-
           if (sortOrder == Order.ASC) {
-            query.where(
-                comment.likeCount.gt(likeCursor)
-                    .or(comment.likeCount.eq(likeCursor)
-                        .and(comment.createdAt.gt(afterTime)))
-            );
+            cursorCondition = comment.likeCount.gt(likeCursor)
+                .or(comment.likeCount.eq(likeCursor).and(comment.createdAt.gt(afterTime)));
           } else {
-            query.where(
-                comment.likeCount.lt(likeCursor)
-                    .or(comment.likeCount.eq(likeCursor)
-                        .and(comment.createdAt.lt(afterTime)))
-            );
+            cursorCondition = comment.likeCount.lt(likeCursor)
+                .or(comment.likeCount.eq(likeCursor).and(comment.createdAt.lt(afterTime)));
           }
-        } catch (NumberFormatException | DateTimeParseException e) {
-          throw new MonewException(ErrorCode.INVALID_CURSOR_FORMAT, Map.of("error", e.getMessage()));
         }
-      }
-
-    } else {
-      query.orderBy(
-          new OrderSpecifier<>(sortOrder, comment.createdAt),
-          new OrderSpecifier<>(sortOrder, comment.id)
-      );
-
-      if (after != null) {
-        try {
+      } else {
+        if (after != null) {
           Instant afterTime = Instant.parse(after);
           if (sortOrder == Order.ASC) {
-            query.where(comment.createdAt.gt(afterTime));
+            cursorCondition = comment.createdAt.gt(afterTime);
           } else {
-            query.where(comment.createdAt.lt(afterTime));
+            cursorCondition = comment.createdAt.lt(afterTime);
           }
-        } catch (DateTimeParseException e) {
-          throw new MonewException(ErrorCode.INVALID_AFTER_FORMAT, Map.of("error", e.getMessage()));
         }
       }
+    } catch (NumberFormatException | DateTimeParseException e) {
+      throw new MonewException(ErrorCode.INVALID_CURSOR_FORMAT, Map.of("error", e.getMessage()));
     }
+
+    if (cursorCondition != null) {
+      baseCondition = baseCondition.and(cursorCondition);
+    }
+
+    var query = queryFactory.selectFrom(comment)
+        .where(baseCondition)
+        .orderBy(
+            "likeCount".equals(orderBy)
+                ? new OrderSpecifier<>(sortOrder, comment.likeCount)
+                : new OrderSpecifier<>(sortOrder, comment.createdAt),
+            new OrderSpecifier<>(sortOrder, comment.createdAt),
+            new OrderSpecifier<>(sortOrder, comment.id)
+        )
+        .limit(limit);
 
     return query.fetch();
   }

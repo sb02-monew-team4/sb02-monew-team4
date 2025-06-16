@@ -1,6 +1,5 @@
 package com.team4.monew.asynchronous.event.articleview;
 
-import com.team4.monew.entity.ArticleView;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,5 +9,5 @@ import lombok.Getter;
 public class ArticleViewDeletedEvent {
 
   private final UUID userId;
-  private final ArticleView articleView;
+  private final UUID articleId;
 }

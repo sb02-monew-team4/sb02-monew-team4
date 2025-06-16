@@ -1,5 +1,6 @@
 package com.team4.monew.service.basic;
 
+import com.team4.monew.asynchronous.event.articleview.ArticleViewCreatedEvent;
 import com.team4.monew.dto.article.ArticleRestoreResultDto;
 import com.team4.monew.dto.article.ArticleViewDto;
 import com.team4.monew.dto.article.CursorPageResponseArticleDto;
@@ -23,6 +24,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,7 @@ public class BasicArticleService implements ArticleService {
   private final ArticleViewMapper articleViewMapper;
   private final ArticleS3Service articleS3Service;
   private final KeywordFilterService keywordFilterService;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   public ArticleViewDto registerArticleView(UUID articleId, UUID userId) {
@@ -52,6 +55,9 @@ public class BasicArticleService implements ArticleService {
     // viewCount 증가
     article.incrementViewCount();
     log.info("article ID: {}, user ID: {} articleView 저장 완료", article.getId(), user.getId());
+
+    eventPublisher.publishEvent(new ArticleViewCreatedEvent(userId, articleView));
+
     return articleViewMapper.toDto(savedArticleView);
   }
 
@@ -122,4 +128,5 @@ public class BasicArticleService implements ArticleService {
     articleRepository.deleteById(articleId);
     log.warn("article ID: {} 삭제 완료", articleId);
   }
+
 }

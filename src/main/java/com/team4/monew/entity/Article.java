@@ -23,7 +23,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "article")
+@Table(name = "articles")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -77,7 +77,14 @@ public class Article {
     this.originalLink = originalLink;
     this.title = title;
     this.publishedDate = publishedDate;
-    this.summary = (summary.length() > 140) ? summary.substring(0, 140) : summary;
+
+    String tempSummary = (summary != null) ? summary : "";
+    tempSummary = tempSummary.trim();
+    if (tempSummary.length() > 140) {
+      this.summary = tempSummary.substring(0, 140) + "...";
+    } else {
+      this.summary = tempSummary;
+    }
   }
 
   public void addInterest(Interest interest) {

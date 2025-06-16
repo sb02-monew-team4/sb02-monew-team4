@@ -1,5 +1,6 @@
 package com.team4.monew.service.collector;
 
+import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
@@ -10,6 +11,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,21 +34,42 @@ public class RssCollectorService {
 
   private List<Article> fetchArticlesFromSource(ArticleSource source) {
     try {
-      URL feedUrl = new URL(source.getRssUrl());
+      String rssUrl = source.getRssUrl();
+      log.info("RSS 수집 시작 - source: {}, url: {}", source.getSource(), rssUrl);
+
+      URL feedUrl = new URL(rssUrl);
       SyndFeed feed = syndFeedInput.build(new XmlReader(feedUrl));
+
       return feed.getEntries().stream()
-          .map(entry -> convertToArticle(entry, source))
+          .map(entry -> {
+            try {
+              return convertToArticle(entry, source);
+            } catch (Exception e) {
+              log.warn("entry 변환 실패 - title: {}, error: {}",
+                  entry.getTitle(), e.getMessage(), e);
+              return null;
+            }
+          })
+          .filter(Objects::nonNull)
           .collect(Collectors.toList());
+
     } catch (Exception e) {
       log.error("{} 수집 실패: {}", source.getSource(), e.getMessage());
       return Collections.emptyList();
     }
   }
 
-  // summary 길이 150 넘으면 substring 하도록 수정
   private Article convertToArticle(SyndEntry entry, ArticleSource source) {
-    String summary = entry.getDescription().getValue();
-    if (summary.length() > 150) {
+    String summary = null;
+    SyndContent syndDescription = entry.getDescription();
+    if (syndDescription != null) {
+      summary = syndDescription.getValue();
+    } else {
+      log.debug("[{}] 기사 '{}'에 description (summary) 필드가 없습니다.", source.getSource(), entry.getTitle());
+    }
+
+    // summary 길이 150 넘으면 substring 하도록 수정
+    if (summary != null && summary.length() > 150) {
       summary = summary.substring(0, 150);
     }
     return new Article(
