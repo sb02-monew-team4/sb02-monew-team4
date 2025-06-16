@@ -8,6 +8,7 @@ import com.team4.monew.exception.user.UserAlreadyExistException;
 import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.mapper.UserMapper;
 import com.team4.monew.repository.UserRepository;
+import com.team4.monew.service.UserActivityService;
 import com.team4.monew.service.UserService;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class BasicUserService implements UserService {
 
   private final UserRepository userRepository;
   private final UserMapper userMapper;
+  private final UserActivityService userActivityService;
 
   @Override
   public UserDto register(UserRegisterRequest registerRequest) {
@@ -31,8 +33,11 @@ public class BasicUserService implements UserService {
       throw UserAlreadyExistException.byEmail(email);
     }
 
-    User user = User.create(registerRequest.email(), registerRequest.nickname(), registerRequest.password());
+    User user = User.create(registerRequest.email(), registerRequest.nickname(),
+        registerRequest.password());
     User registeredUser = userRepository.save(user);
+
+    userActivityService.create(user);
 
     return userMapper.toDto(registeredUser);
   }
@@ -43,6 +48,8 @@ public class BasicUserService implements UserService {
         .orElseThrow(() -> UserNotFoundException.byId(userId));
 
     user.update(updateRequest.nickname());
+
+    userActivityService.updateUser(user);
 
     return userMapper.toDto(user);
   }

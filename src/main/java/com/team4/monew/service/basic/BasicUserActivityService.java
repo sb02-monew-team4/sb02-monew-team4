@@ -14,6 +14,7 @@ import com.team4.monew.entity.User;
 import com.team4.monew.entity.UserActivity;
 import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.exception.userActivity.UserActivityNotFoundException;
+import com.team4.monew.exception.userActivity.UserActivityNotFoundInMongoException;
 import com.team4.monew.mapper.ArticleViewMapper;
 import com.team4.monew.mapper.CommentActivityMapper;
 import com.team4.monew.mapper.CommentLikeActivityMapper;
@@ -62,11 +63,30 @@ public class BasicUserActivityService implements UserActivityService {
     return userActivityMapper.toDto(userActivity);
   }
 
+  @Transactional
+  @Override
+  public void updateUser(User user) {
+    UserDto dto = userMapper.toDto(user);
+    UserActivity userActivity = getUserActivityOrThrow(user.getId());
+    userActivity.updateUser(dto);
+    userActivityRepository.save(userActivity);
+  }
+
+  @Transactional
+  @Override
+  public void delete(UUID userId) {
+    if (!userActivityRepository.existsByUser_Id(userId)) {
+      throw UserActivityNotFoundInMongoException.byUserId(userId);
+    }
+    userActivityRepository.deleteByUser_Id(userId);
+  }
+
   @Override
   public UserActivityDto getByUserId(UUID userId) {
     UserActivity userActivity = getUserActivityOrThrow(userId);
     return userActivityMapper.toDto(userActivity);
   }
+
 
   @Transactional
   @Override
@@ -81,11 +101,9 @@ public class BasicUserActivityService implements UserActivityService {
 
   @Transactional
   @Override
-  public void removeRecentComment(UUID userId, Comment comment) {
-    CommentActivityDto dto = commentActivityMapper.toDto(comment);
-
+  public void removeRecentComment(UUID userId, UUID commentId) {
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    userActivity.getRecentCommentActivityDtos().remove(dto);
+    userActivity.getRecentCommentActivityDtos().removeIf(dto -> commentId.equals(dto.id()));
     userActivityRepository.save(userActivity);
   }
 
@@ -117,11 +135,9 @@ public class BasicUserActivityService implements UserActivityService {
 
   @Transactional
   @Override
-  public void removeCommentLike(UUID userId, CommentLike commentLike) {
-    CommentLikeActivityDto dto = commentLikeActivityMapper.toDto(commentLike);
-
+  public void removeCommentLike(UUID userId, UUID commentLikeId) {
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    userActivity.getRecentCommentLikeActivityDtos().remove(dto);
+    userActivity.getRecentCommentLikeActivityDtos().removeIf(dto -> commentLikeId.equals(dto.id()));
     userActivityRepository.save(userActivity);
   }
 
@@ -138,11 +154,9 @@ public class BasicUserActivityService implements UserActivityService {
 
   @Transactional
   @Override
-  public void removeRecentArticleView(UUID userId, ArticleView articleView) {
-    ArticleViewDto dto = articleViewMapper.toDto(articleView);
-
+  public void removeRecentArticleView(UUID userId, UUID articleId) {
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    userActivity.getRecentArticleViewDtos().remove(dto);
+    userActivity.getRecentArticleViewDtos().removeIf(dto -> articleId.equals(dto.articleId()));
     userActivityRepository.save(userActivity);
   }
 
@@ -158,11 +172,9 @@ public class BasicUserActivityService implements UserActivityService {
 
   @Transactional
   @Override
-  public void removeSubscription(UUID userId, Subscription subscription) {
-    SubscriptionDto dto = subscriptionMapper.toDto(subscription);
-
+  public void removeSubscription(UUID userId, UUID subscriptionId) {
     UserActivity userActivity = getUserActivityOrThrow(userId);
-    userActivity.getSubscriptionDtos().remove(dto);
+    userActivity.getSubscriptionDtos().removeIf(dto -> subscriptionId.equals(dto.id()));
     userActivityRepository.save(userActivity);
   }
 

@@ -1,5 +1,7 @@
 package com.team4.monew.service.basic;
 
+import com.team4.monew.asynchronous.event.subscription.SubscriptionCreatedEvent;
+import com.team4.monew.asynchronous.event.subscription.SubscriptionDeletedEvent;
 import com.team4.monew.dto.interest.CursorPageResponseInterestDto;
 import com.team4.monew.dto.interest.InterestDto;
 import com.team4.monew.dto.interest.InterestRegisterRequest;
@@ -23,6 +25,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.similarity.LevenshteinDistance;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -35,6 +38,7 @@ public class BasicInterestService implements InterestService {
   private final InterestMapper interestMapper;
   private final SubscriptionRepository subscriptionRepository;
   private final SubscriptionMapper subscriptionMapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   @Override
@@ -70,7 +74,9 @@ public class BasicInterestService implements InterestService {
     int editDistance = distance.apply(s1, s2);
 
     int maxLength = Math.max(s1.length(), s2.length());
-    if (maxLength == 0) return true;
+    if (maxLength == 0) {
+      return true;
+    }
 
     double similarity = 1.0 - ((double) editDistance / maxLength);
     return similarity >= 0.8;
@@ -167,7 +173,8 @@ public class BasicInterestService implements InterestService {
     Interest interest = interestRepository.findById(interestId)
         .orElseThrow(() -> new MonewException(ErrorCode.INTEREST_NOT_FOUND));
 
-    Optional<Subscription> existing = subscriptionRepository.findByUserIdAndInterestId(userId, interestId);
+    Optional<Subscription> existing = subscriptionRepository.findByUserIdAndInterestId(userId,
+        interestId);
     if (existing.isPresent()) {
       return subscriptionMapper.toDto(existing.get());
     }
@@ -177,6 +184,8 @@ public class BasicInterestService implements InterestService {
 
     Subscription subscription = new Subscription(user, interest);
     subscriptionRepository.save(subscription);
+
+    eventPublisher.publishEvent(new SubscriptionCreatedEvent(userId, subscription));
 
     interest.increaseSubscriberCount();
 
@@ -191,6 +200,8 @@ public class BasicInterestService implements InterestService {
 
     Subscription subscription = subscriptionRepository.findByUserIdAndInterestId(userId, interestId)
         .orElseThrow(() -> new MonewException(ErrorCode.SUBSCRIPTION_NOT_FOUND));
+
+    eventPublisher.publishEvent(new SubscriptionDeletedEvent(userId, subscription.getId()));
 
     subscriptionRepository.delete(subscription);
 

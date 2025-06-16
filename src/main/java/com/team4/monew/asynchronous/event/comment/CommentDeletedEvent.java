@@ -1,6 +1,5 @@
 package com.team4.monew.asynchronous.event.comment;
 
-import com.team4.monew.entity.Comment;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,5 +9,5 @@ import lombok.Getter;
 public class CommentDeletedEvent {
 
   private final UUID userId;
-  private final Comment comment;
+  private final UUID commentId;
 }
