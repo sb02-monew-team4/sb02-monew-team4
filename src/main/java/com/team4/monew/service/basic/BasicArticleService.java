@@ -114,4 +114,3 @@ public class BasicArticleService implements ArticleService {
     log.warn("article ID: {} 삭제 완료", articleId);
   }
 }
-
