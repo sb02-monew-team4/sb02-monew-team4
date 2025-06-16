@@ -22,6 +22,8 @@ public class JacksonConfig {
     mapper.registerModule(new JavaTimeModule());
     // 빈 객체 직렬화 허용
     mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    // java.time 객체(Instant, LocalDateTime 등)를 Unix timestamp 형식 대신 ISO 8601 문자열 형식으로 직렬화하도록 설정
+    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     return mapper;
   }
 }
