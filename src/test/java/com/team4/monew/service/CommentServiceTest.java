@@ -73,7 +73,6 @@ public class CommentServiceTest {
   @Mock
   private ApplicationEventPublisher eventPublisher;
 
-
   @Captor
   private ArgumentCaptor<CommentLikeCreatedEventForNotification> eventCaptor;
 
@@ -110,9 +109,21 @@ public class CommentServiceTest {
     String content = "댓글 내용";
     CommentRegisterRequest request = new CommentRegisterRequest(articleId, userId, content);
 
+    UUID commentId = UUID.randomUUID();
     comment = new Comment(user, article, content);
-    ReflectionTestUtils.setField(comment, "id", UUID.randomUUID());
+    ReflectionTestUtils.setField(comment, "id", commentId);
 
+    CommentDto dto = new CommentDto(
+        commentId,
+        articleId,
+        userId,
+        user.getNickname(),
+        comment.getContent(),
+        0,
+        false,
+        Instant.now());
+
+    when(commentMapper.toDto(any(Comment.class), any(UUID.class))).thenReturn(dto);
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(articleRepository.findById(articleId)).thenReturn(Optional.of(article));
     when(commentRepository.save(any(Comment.class))).thenReturn(comment);
@@ -230,7 +241,6 @@ public class CommentServiceTest {
 
     Article mockArticle = mock(Article.class);
     UUID articleId = UUID.randomUUID();
-    when(mockArticle.getId()).thenReturn(articleId);
 
     Comment comment1 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle,
         "좋아요 많은 댓글", 10L, LocalDateTime.of(2025, 5, 1, 10, 0, 0));
@@ -472,8 +482,19 @@ public class CommentServiceTest {
     comment = new Comment(user, article, "기존 댓글 내용");
     ReflectionTestUtils.setField(comment, "id", commentId);
 
+    CommentDto dto = new CommentDto(
+        commentId,
+        articleId,
+        userId,
+        user.getNickname(),
+        updatedContent,
+        0,
+        false,
+        Instant.now());
+
     when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
     when(commentRepository.save(any(Comment.class))).thenReturn(comment);
+    when(commentMapper.toDto(any(Comment.class), any(UUID.class))).thenReturn(dto);
 
     CommentDto result = basicCommentService.update(commentId, userId, request);
 

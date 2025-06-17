@@ -65,7 +65,6 @@ class InterestServiceTest {
     when(interestRepository.findAll()).thenReturn(List.of());
 
     User mockUser = mock(User.class);
-    when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
 
     Interest interestEntity = mock(Interest.class);
     when(interestMapper.toEntity(request)).thenReturn(interestEntity);
@@ -73,6 +72,7 @@ class InterestServiceTest {
     InterestDto expectedDto = new InterestDto(UUID.randomUUID(), "경제", List.of("주식", "금리"), 0,
         false);
     when(interestMapper.toDto(interestEntity, userId)).thenReturn(expectedDto);
+    when(userRepository.existsById(userId)).thenReturn(true);
 
     // when
     InterestDto actual = basicInterestService.register(userId, request);
@@ -82,7 +82,6 @@ class InterestServiceTest {
     assertEquals(expectedDto.keywords(), actual.keywords());
 
     verify(interestRepository).save(interestEntity);
-    verify(userRepository).findById(userId);
     verify(interestMapper).toDto(interestEntity, userId);
   }
 
@@ -127,7 +126,6 @@ class InterestServiceTest {
     InterestRegisterRequest request = new InterestRegisterRequest("헬스", List.of("운동"));
 
     when(interestRepository.findAll()).thenReturn(List.of());
-    when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     MonewException ex = assertThrows(
         MonewException.class,
