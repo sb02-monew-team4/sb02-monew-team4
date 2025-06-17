@@ -2,7 +2,6 @@ package com.team4.monew.service.basic;
 
 import com.team4.monew.asynchronous.event.articleview.ArticleViewCreatedEvent;
 import com.team4.monew.dto.article.ArticleRestoreResultDto;
-import com.team4.monew.dto.article.ArticleSearchRequest;
 import com.team4.monew.dto.article.ArticleViewDto;
 import com.team4.monew.dto.article.CursorPageResponseArticleDto;
 import com.team4.monew.entity.Article;
@@ -63,9 +62,25 @@ public class BasicArticleService implements ArticleService {
   }
 
   @Override
-  public CursorPageResponseArticleDto getAllArticles(ArticleSearchRequest request, UUID userId) {
-
-    return articleRepository.findArticlesWithCursor(request, userId);
+  public CursorPageResponseArticleDto getAllArticles(
+      String keyword,
+      UUID interestId,
+      List<String> sourceIn,
+      Instant publishDateFrom,
+      Instant publishDateTo,
+      String orderBy,
+      String direction,
+      String cursor,
+      int limit,
+      Instant after,
+      UUID userId
+  ) {
+    return articleRepository.findArticlesWithCursor(
+        keyword, interestId, sourceIn,
+        publishDateFrom, publishDateTo,
+        orderBy, direction,
+        cursor, limit,
+        after, userId);
   }
 
   @Override
@@ -113,4 +128,5 @@ public class BasicArticleService implements ArticleService {
     articleRepository.deleteById(articleId);
     log.warn("article ID: {} 삭제 완료", articleId);
   }
+
 }
