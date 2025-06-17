@@ -34,7 +34,7 @@ public class KeywordFilterService {
 
   // 키워드 별로 해당하는 Interest 들을 매핑하는 Map 생성
   private Map<String, Set<Interest>> buildKeywordInterestsMap() {
-    return interestRepository.findAllWithKeywords().stream()
+    return interestRepository.findAllSubscribedInterestsWithKeywords().stream()
         .flatMap(interest -> interest.getKeywords().stream()
             .map(
                 InterestKeyword -> Map.entry(InterestKeyword.getKeyword().toLowerCase(), interest)))
