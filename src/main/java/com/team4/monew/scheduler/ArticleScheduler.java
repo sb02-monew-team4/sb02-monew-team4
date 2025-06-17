@@ -49,6 +49,7 @@ public class ArticleScheduler {
     // Naver: Article과 Interest 연결하기 위해 filterArticles 호출
     List<Article> filteredRss = filterService.filterArticles(rssArticles);
     List<Article> filteredNaver = filterService.filterArticles(naverArticles);
+    log.info("필터링 완료 RSS {}개, 네이버 {}개", filteredRss.size(), filteredNaver.size());
 
     // 새로 저장된 기사만 수집
     List<Article> savedFilteredRss = saveUniqueArticles(filteredRss);
