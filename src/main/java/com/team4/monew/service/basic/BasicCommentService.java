@@ -23,7 +23,7 @@ import com.team4.monew.repository.CommentLikeRepository;
 import com.team4.monew.repository.CommentRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.CommentService;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -133,7 +133,7 @@ public class BasicCommentService implements CommentService {
       throw new MonewException(ErrorCode.COMMENT_ALREADY_LIKED);
     }
 
-    CommentLike like = new CommentLike(null, comment, user, Instant.now());
+    CommentLike like = new CommentLike(null, comment, user, LocalDateTime.now());
     commentLikeRepository.save(like);
 
     comment.increaseLikeCount();

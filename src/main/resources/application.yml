@@ -23,7 +23,6 @@ spring:
       uri: ${MONGODB_URI}
 
 
-
 naver:
   client:
     id: ${NAVER_CLIENT_ID}

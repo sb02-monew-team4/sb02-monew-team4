@@ -1,6 +1,6 @@
 package com.team4.monew.dto.UserActivity;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record CommentActivityDto(
@@ -11,7 +11,7 @@ public record CommentActivityDto(
     String userNickname,
     String content,
     Long likeCount,
-    Instant createdAt
+    LocalDateTime createdAt
 ) {
 
 }

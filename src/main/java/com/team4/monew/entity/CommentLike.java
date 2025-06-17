@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -40,5 +41,5 @@ public class CommentLike {
 
   @CreatedDate
   @Column(name = "created_at", updatable = false, nullable = false)
-  private Instant createdAt;
+  private LocalDateTime createdAt;
 }
