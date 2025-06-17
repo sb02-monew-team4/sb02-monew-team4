@@ -10,7 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -41,7 +41,7 @@ public class Subscription {
 
   @CreatedDate
   @Column(nullable = false, updatable = false)
-  private Instant createdAt;
+  private LocalDateTime createdAt;
 
   public Subscription(User user, Interest interest) {
     this.user = user;

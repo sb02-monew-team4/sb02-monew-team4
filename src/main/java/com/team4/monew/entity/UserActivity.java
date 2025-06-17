@@ -6,7 +6,7 @@ import com.team4.monew.dto.article.ArticleViewDto;
 import com.team4.monew.dto.interest.SubscriptionDto;
 import com.team4.monew.dto.user.UserDto;
 import jakarta.persistence.Id;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -36,7 +36,7 @@ public class UserActivity {
 
   @CreatedDate
   @LastModifiedDate
-  private Instant lastUpdated;
+  private LocalDateTime lastUpdated;
 
   public UserActivity(UserDto user) {
     this.id = UUID.randomUUID();

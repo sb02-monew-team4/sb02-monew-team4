@@ -10,7 +10,7 @@ import com.team4.monew.dto.UserActivity.UserActivityDto;
 import com.team4.monew.interceptor.AuthInterceptor;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicUserActivityService;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +51,7 @@ public class UserActivityControllerTest {
         userId,
         "test@test.com",
         "test",
-        Instant.now(),
+        LocalDateTime.now(),
         List.of(),
         List.of(),
         List.of(),

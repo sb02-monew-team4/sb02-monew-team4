@@ -7,7 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -44,7 +44,7 @@ public class User {
 
   @CreatedDate
   @Column(updatable = false, nullable = false)
-  private Instant createdAt;
+  private LocalDateTime createdAt;
 
   public static User create(String email, String nickname, String password) {
     return User.builder()

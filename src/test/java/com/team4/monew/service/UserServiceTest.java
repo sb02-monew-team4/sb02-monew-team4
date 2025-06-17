@@ -18,6 +18,7 @@ import com.team4.monew.mapper.UserMapper;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicUserService;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,8 +58,8 @@ public class UserServiceTest {
 
     user = User.create(email, nickname, password);
     ReflectionTestUtils.setField(user, "id", userId);
-    ReflectionTestUtils.setField(user, "createdAt", Instant.now());
-    userDto = new UserDto(userId, email, nickname, Instant.now());
+    ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
+    userDto = new UserDto(userId, email, nickname, LocalDateTime.now());
   }
 
   @Test

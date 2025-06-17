@@ -11,7 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -44,7 +44,7 @@ public class ArticleView {
   @CreatedDate
   @LastModifiedDate
   @Column(name = "viewed_at", nullable = false)
-  private Instant viewedAt;
+  private LocalDateTime viewedAt;
 
   public ArticleView(Article article, User user) {
     this.article = article;

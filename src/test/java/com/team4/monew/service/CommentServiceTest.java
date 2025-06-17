@@ -33,7 +33,7 @@ import com.team4.monew.repository.CommentRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicCommentService;
 import java.time.Instant;
-import java.util.HashSet;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -92,7 +92,7 @@ public class CommentServiceTest {
 
     user = User.create("test@test.com", "test", "123");
     ReflectionTestUtils.setField(user, "id", userId);
-    ReflectionTestUtils.setField(user, "createdAt", Instant.now());
+    ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
 
     article = new Article(
         "출처",
