@@ -73,6 +73,7 @@ public class CommentServiceTest {
   @Mock
   private ApplicationEventPublisher eventPublisher;
 
+
   @Captor
   private ArgumentCaptor<CommentLikeCreatedEventForNotification> eventCaptor;
 
@@ -169,13 +170,17 @@ public class CommentServiceTest {
 
     Article mockArticle = mock(Article.class);
 
-    Comment comment1 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockArticle, "댓글1", Instant.parse("2025-05-01T10:00:00Z"));
-    Comment comment2 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockArticle, "댓글2", Instant.parse("2025-05-01T10:05:00Z"));
-    Comment comment3 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockArticle, "댓글3", Instant.parse("2025-05-01T10:10:00Z"));
+    Comment comment1 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockArticle, "댓글1",
+        Instant.parse("2025-05-01T10:00:00Z"));
+    Comment comment2 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockArticle, "댓글2",
+        Instant.parse("2025-05-01T10:05:00Z"));
+    Comment comment3 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockArticle, "댓글3",
+        Instant.parse("2025-05-01T10:10:00Z"));
 
     List<Comment> mockComments = List.of(comment1, comment2, comment3);
 
-    when(commentRepository.findCommentsByArticleWithCursorPaging(articleId, orderBy, direction, cursor, after, limit))
+    when(commentRepository.findCommentsByArticleWithCursorPaging(articleId, orderBy, direction,
+        cursor, after, limit))
         .thenReturn(mockComments);
 
     when(commentRepository.countByArticleId(articleId)).thenReturn(10L);
@@ -225,13 +230,17 @@ public class CommentServiceTest {
     UUID articleId = UUID.randomUUID();
     when(mockArticle.getId()).thenReturn(articleId);
 
-    Comment comment1 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle, "좋아요 많은 댓글", 10L, Instant.parse("2025-05-01T10:00:00Z"));
-    Comment comment2 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle, "중간 댓글", 5L, Instant.parse("2025-05-01T10:05:00Z"));
-    Comment comment3 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle, "좋아요 적은 댓글", 1L, Instant.parse("2025-05-01T10:10:00Z"));
+    Comment comment1 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle,
+        "좋아요 많은 댓글", 10L, Instant.parse("2025-05-01T10:00:00Z"));
+    Comment comment2 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle,
+        "중간 댓글", 5L, Instant.parse("2025-05-01T10:05:00Z"));
+    Comment comment3 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle,
+        "좋아요 적은 댓글", 1L, Instant.parse("2025-05-01T10:10:00Z"));
 
     List<Comment> mockComments = List.of(comment1, comment2, comment3);
 
-    when(commentRepository.findCommentsByArticleWithCursorPaging(eq(articleId), eq(orderBy), eq(direction), eq(cursor), eq(after), eq(limit)))
+    when(commentRepository.findCommentsByArticleWithCursorPaging(eq(articleId), eq(orderBy),
+        eq(direction), eq(cursor), eq(after), eq(limit)))
         .thenReturn(mockComments);
 
     when(commentRepository.countByArticleId(articleId)).thenReturn(20L);
@@ -252,7 +261,8 @@ public class CommentServiceTest {
         });
 
     CursorPageResponseCommentDto actualResponse =
-        basicCommentService.getCommentsByArticleWithCursor(articleId, orderBy, direction, cursor, after, limit, requesterId);
+        basicCommentService.getCommentsByArticleWithCursor(articleId, orderBy, direction, cursor,
+            after, limit, requesterId);
 
     assertEquals(3, actualResponse.content().size());
     assertEquals(comment3.getId().toString(), actualResponse.nextCursor());
@@ -279,7 +289,8 @@ public class CommentServiceTest {
     when(commentRepository.countByArticleId(articleId)).thenReturn(0L);
 
     CursorPageResponseCommentDto actualResponse =
-        basicCommentService.getCommentsByArticleWithCursor(articleId, orderBy, direction, cursor, after, limit, requesterId);
+        basicCommentService.getCommentsByArticleWithCursor(articleId, orderBy, direction, cursor,
+            after, limit, requesterId);
 
     assertTrue(actualResponse.content().isEmpty());
     assertEquals(0, actualResponse.size());
@@ -317,7 +328,8 @@ public class CommentServiceTest {
           return savedLike;
         });
 
-    when(commentRepository.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(commentRepository.save(any(Comment.class))).thenAnswer(
+        invocation -> invocation.getArgument(0));
 
     CommentLikeDto expectedDto = new CommentLikeDto(
         expectedLikeId,
@@ -416,7 +428,8 @@ public class CommentServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(commentLikeRepository.findByCommentAndUser(comment, user)).thenReturn(Optional.of(like));
     doNothing().when(commentLikeRepository).delete(like);
-    when(commentRepository.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(commentRepository.save(any(Comment.class))).thenAnswer(
+        invocation -> invocation.getArgument(0));
 
     basicCommentService.unlikeComment(commentId, userId);
 
@@ -514,7 +527,8 @@ public class CommentServiceTest {
     ReflectionTestUtils.setField(comment, "isDeleted", false);
 
     when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
-    when(commentRepository.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(commentRepository.save(any(Comment.class))).thenAnswer(
+        invocation -> invocation.getArgument(0));
 
     basicCommentService.softDelete(commentId, userId);
 
