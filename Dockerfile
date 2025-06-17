@@ -17,8 +17,7 @@ WORKDIR /app
 
 ENV PROJECT_NAME=monew
 ENV PROJECT_VERSION=0.0.1-SNAPSHOT
-# JVM 타임존 설정 옵션 추가
-ENV JVM_OPTS="-Duser.timezone=Asia/Seoul"
+ENV JVM_OPTS=""
 ENV SERVER_PORT=80
 
 VOLUME /tmp
@@ -28,4 +27,4 @@ COPY --from=builder /app/build/libs/${PROJECT_NAME}-${PROJECT_VERSION}.jar app.j
 
 EXPOSE 80
 
-ENTRYPOINT ["java", "$(JVM_OPTS)", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Duser.timezone=Asia/Seoul", "-jar", "app.jar"]
