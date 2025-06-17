@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -46,11 +47,11 @@ public class Comment {
 
   @CreatedDate
   @Column(name = "created_at", updatable = false, nullable = false)
-  private Instant createdAt;
+  private LocalDateTime createdAt;
 
   @LastModifiedDate
   @Column(name = "updated_at", nullable = false)
-  private Instant updatedAt;
+  private LocalDateTime updatedAt;
 
   @Column(name = "is_deleted")
   private Boolean isDeleted = false;
@@ -64,7 +65,7 @@ public class Comment {
     this.content = content;
   }
 
-  private Comment(UUID id, User user, Article article, String content, Long likeCount, Instant createdAt) {
+  private Comment(UUID id, User user, Article article, String content, Long likeCount, LocalDateTime createdAt) {
     this.id = id;
     this.user = user;
     this.article = article;
@@ -73,11 +74,11 @@ public class Comment {
     this.createdAt = createdAt;
   }
 
-  public static Comment createWithLikeCount(UUID id, User user, Article article, String content, Long likeCount, Instant createdAt) {
+  public static Comment createWithLikeCount(UUID id, User user, Article article, String content, Long likeCount, LocalDateTime createdAt) {
     return new Comment(id, user, article, content, likeCount, createdAt);
   }
 
-  public static Comment createWithCreatedAt(UUID id, User user, Article article, String content, Instant createdAt) {
+  public static Comment createWithCreatedAt(UUID id, User user, Article article, String content, LocalDateTime createdAt) {
     return new Comment(id, user, article, content, 0L, createdAt);
   }
 
