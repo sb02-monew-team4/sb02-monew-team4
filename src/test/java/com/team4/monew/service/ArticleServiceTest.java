@@ -20,6 +20,7 @@ import com.team4.monew.repository.ArticleViewRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicArticleService;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -53,16 +54,17 @@ public class ArticleServiceTest {
     Article article = new Article();
     User user = User.create(null, null, null);
     ArticleView articleView = new ArticleView(article, user);
-    Instant now = Instant.now();
+    LocalDateTime nowLocalDateTime = LocalDateTime.now();
+    Instant nowInstant = Instant.now();
 
     ArticleViewDto expectedDto = new ArticleViewDto(
         UUID.randomUUID(),
         userId,
-        now,
+        nowLocalDateTime,
         newsId,
         "test source",
         "https://test.com",
-        now,
+        nowInstant,
         "test summary",
         10L,
         100L

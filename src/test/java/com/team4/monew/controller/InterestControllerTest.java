@@ -1,13 +1,31 @@
 package com.team4.monew.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.team4.monew.dto.interest.*;
+import com.team4.monew.dto.interest.CursorPageResponseInterestDto;
+import com.team4.monew.dto.interest.InterestDto;
+import com.team4.monew.dto.interest.InterestRegisterRequest;
+import com.team4.monew.dto.interest.InterestUpdateRequest;
+import com.team4.monew.dto.interest.SubscriptionDto;
 import com.team4.monew.interceptor.AuthInterceptor;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicInterestService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,15 +36,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.List;
-import java.util.UUID;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(InterestController.class)
 @Import(AuthInterceptor.class)
@@ -180,7 +189,7 @@ class InterestControllerTest {
         "테스트 관심사",
         List.of("키워드1", "키워드2"),
         42,
-        Instant.now()
+        LocalDateTime.now()
     );
 
     Mockito.when(interestService.subscribeInterest(INTEREST_ID, fixedUserId))

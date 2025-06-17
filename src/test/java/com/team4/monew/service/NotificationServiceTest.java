@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
 
 import com.team4.monew.dto.notifications.CursorPageResponseNotificationDto;
 import com.team4.monew.dto.notifications.NotificationDto;
@@ -20,6 +19,7 @@ import com.team4.monew.repository.NotificationRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicNotificationService;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -69,12 +69,12 @@ public class NotificationServiceTest {
 
     user = User.create("test@example.com", "testUser", "password123");
     ReflectionTestUtils.setField(user, "id", userId);
-    ReflectionTestUtils.setField(user, "createdAt", Instant.now());
+    ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
 
     notification = Notification.create(user, content, resourceId, resourceType);
     ReflectionTestUtils.setField(notification, "id", notificationId);
-    ReflectionTestUtils.setField(notification, "createdAt", Instant.now());
-    ReflectionTestUtils.setField(notification, "updatedAt", Instant.now());
+    ReflectionTestUtils.setField(notification, "createdAt", LocalDateTime.now());
+    ReflectionTestUtils.setField(notification, "updatedAt", LocalDateTime.now());
   }
 
   @Test
@@ -195,11 +195,11 @@ public class NotificationServiceTest {
   @Test
   @DisplayName("알림 목록 조회_성공")
   void findUnconfirmedByCursor_Success_ShouldReturnCursorPage(){
-    Instant now = Instant.now();
-    Instant after = now.minusSeconds(300);
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime after = now.minusSeconds(300);
     int limit = 2;
     String cursorString = null;
-    Instant cursorInstant = null;
+    LocalDateTime cursorLocalDateTime = null;
 
     Notification n1 = Notification.builder()
         .id(UUID.randomUUID())
@@ -247,7 +247,7 @@ public class NotificationServiceTest {
             n.getResourceId()
         )).toList();
 
-    given(notificationRepository.findUnconfirmedByCursor(cursorInstant, after, limit + 1, userId))
+    given(notificationRepository.findUnconfirmedByCursor(cursorLocalDateTime, after, limit + 1, userId))
         .willReturn(entityList);
 
     given(notificationMapper.toDtoList(List.of(n1, n2)))
@@ -269,7 +269,7 @@ public class NotificationServiceTest {
     assertThat(result.nextAfter()).isEqualTo(n2.getCreatedAt());
     assertThat(result.nextCursor()).isEqualTo(n2.getCreatedAt().toString());
 
-    then(notificationRepository).should().findUnconfirmedByCursor(cursorInstant, after, limit + 1, userId);
+    then(notificationRepository).should().findUnconfirmedByCursor(cursorLocalDateTime, after, limit + 1, userId);
     then(notificationMapper).should().toDtoList(List.of(n1, n2));
     then(notificationRepository).should().countByUserIdAndConfirmedFalse(userId);
   }

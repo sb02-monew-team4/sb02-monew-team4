@@ -23,6 +23,7 @@ import com.team4.monew.service.collector.NaverApiCollectorService;
 import com.team4.monew.service.collector.RssCollectorService;
 import com.team4.monew.service.filter.KeywordFilterService;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -109,7 +110,7 @@ class ArticleSchedulerTest {
     Subscription subscription1 = mock(Subscription.class);
     Subscription subscription2 = mock(Subscription.class);
 
-    interest = new Interest(UUID.randomUUID(), "IT", 2L, Instant.now(), Instant.now(), List.of(), List.of(subscription1, subscription2), new HashSet<>(articles));
+    interest = new Interest(UUID.randomUUID(), "IT", 2L, LocalDateTime.now(), LocalDateTime.now(), List.of(), List.of(subscription1, subscription2), new HashSet<>(articles));
     for (Article article : articles) {
       if (!article.getInterest().contains(interest)) {
         article.addInterest(interest);

@@ -13,7 +13,7 @@ import com.team4.monew.mapper.UserActivityMapper;
 import com.team4.monew.mapper.UserMapper;
 import com.team4.monew.repository.UserActivityRepository;
 import com.team4.monew.service.basic.BasicUserActivityService;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -50,14 +50,14 @@ public class UserActivityServiceTest {
         "test",
         "test",
         false,
-        Instant.now()
+        LocalDateTime.now()
     );
 
     UserDto userDto = new UserDto(
         userId,
         "test@test.com",
         "test",
-        Instant.now()
+        LocalDateTime.now()
     );
 
     UserActivity userActivity = new UserActivity(userDto);
@@ -66,7 +66,7 @@ public class UserActivityServiceTest {
         userId,
         "test@test.com",
         "test",
-        Instant.now(),
+        LocalDateTime.now(),
         List.of(),
         List.of(),
         List.of(),

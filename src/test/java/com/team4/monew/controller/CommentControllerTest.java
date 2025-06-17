@@ -1,27 +1,46 @@
 package com.team4.monew.controller;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.team4.monew.dto.comment.*;
+import com.team4.monew.config.WebConfig;
+import com.team4.monew.dto.comment.CommentDto;
+import com.team4.monew.dto.comment.CommentLikeDto;
+import com.team4.monew.dto.comment.CommentRegisterRequest;
+import com.team4.monew.dto.comment.CommentUpdateRequest;
+import com.team4.monew.dto.comment.CursorPageResponseCommentDto;
 import com.team4.monew.exception.ErrorCode;
 import com.team4.monew.exception.MonewException;
+import com.team4.monew.interceptor.AuthInterceptor;
 import com.team4.monew.service.basic.BasicCommentService;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-@WebMvcTest(CommentController.class)
+@WebMvcTest(controllers = CommentController.class,
+    excludeFilters = {
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {AuthInterceptor.class,
+            WebConfig.class})
+    }
+)
 class CommentControllerTest {
 
   @Autowired

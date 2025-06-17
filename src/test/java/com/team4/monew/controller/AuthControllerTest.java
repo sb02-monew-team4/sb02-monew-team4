@@ -14,7 +14,7 @@ import com.team4.monew.dto.user.UserLoginRequest;
 import com.team4.monew.exception.user.InvalidCredentialsException;
 import com.team4.monew.interceptor.AuthInterceptor;
 import com.team4.monew.service.AuthService;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,7 +52,7 @@ public class AuthControllerTest {
         "test@example.com", "password123"
     );
 
-    UserDto userDto = new UserDto(userId, "test@example.com", "testUser", Instant.now());
+    UserDto userDto = new UserDto(userId, "test@example.com", "testUser", LocalDateTime.now());
 
     given(authService.login(request)).willReturn(userDto);
 
