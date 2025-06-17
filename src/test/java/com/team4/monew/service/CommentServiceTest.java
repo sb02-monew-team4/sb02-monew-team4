@@ -148,9 +148,11 @@ public class CommentServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(articleRepository.findById(articleId)).thenReturn(Optional.empty());
 
-    assertThrows(IllegalArgumentException.class, () -> {
+    MonewException exception = assertThrows(MonewException.class, () -> {
       basicCommentService.register(userId, request);
     });
+
+    assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
   }
 
   @Test
@@ -171,11 +173,11 @@ public class CommentServiceTest {
     Article mockArticle = mock(Article.class);
 
     Comment comment1 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockArticle, "댓글1",
-        Instant.parse("2025-05-01T10:00:00Z"));
+        LocalDateTime.of(2025, 5, 1, 10, 0, 0));
     Comment comment2 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockArticle, "댓글2",
-        Instant.parse("2025-05-01T10:05:00Z"));
+        LocalDateTime.of(2025, 5, 1, 10, 5, 0));
     Comment comment3 = Comment.createWithCreatedAt(UUID.randomUUID(), mockUser, mockArticle, "댓글3",
-        Instant.parse("2025-05-01T10:10:00Z"));
+        LocalDateTime.of(2025, 5, 1, 10, 10, 0));
 
     List<Comment> mockComments = List.of(comment1, comment2, comment3);
 
@@ -231,11 +233,11 @@ public class CommentServiceTest {
     when(mockArticle.getId()).thenReturn(articleId);
 
     Comment comment1 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle,
-        "좋아요 많은 댓글", 10L, Instant.parse("2025-05-01T10:00:00Z"));
+        "좋아요 많은 댓글", 10L, LocalDateTime.of(2025, 5, 1, 10, 0, 0));
     Comment comment2 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle,
-        "중간 댓글", 5L, Instant.parse("2025-05-01T10:05:00Z"));
+        "중간 댓글", 5L, LocalDateTime.of(2025, 5, 1, 10, 5, 0));
     Comment comment3 = Comment.createWithLikeCount(UUID.randomUUID(), mockUser, mockArticle,
-        "좋아요 적은 댓글", 1L, Instant.parse("2025-05-01T10:10:00Z"));
+        "좋아요 적은 댓글", 1L, LocalDateTime.of(2025, 5, 1, 10, 10, 0));
 
     List<Comment> mockComments = List.of(comment1, comment2, comment3);
 
@@ -298,14 +300,13 @@ public class CommentServiceTest {
     assertFalse(actualResponse.hasNext());
   }
 
-
   @Test
   @DisplayName("댓글 좋아요 성공")
   void likeComment_success() {
     UUID commentId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
     UUID expectedLikeId = UUID.fromString("54b3da15-a31e-41db-ad20-081033298b72");
-    Instant now = Instant.now();
+    LocalDateTime now = LocalDateTime.now();
 
     User user = User.create("test@example.com", "tester", "password123");
     ReflectionTestUtils.setField(user, "id", userId);
@@ -422,7 +423,7 @@ public class CommentServiceTest {
     ReflectionTestUtils.setField(comment, "id", commentId);
     ReflectionTestUtils.setField(comment, "likeCount", 1L);
 
-    CommentLike like = new CommentLike(UUID.randomUUID(), comment, user, Instant.now());
+    CommentLike like = new CommentLike(UUID.randomUUID(), comment, user, LocalDateTime.now());
 
     when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));

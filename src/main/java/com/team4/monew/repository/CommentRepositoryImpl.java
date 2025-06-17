@@ -10,7 +10,7 @@ import com.team4.monew.exception.ErrorCode;
 import com.team4.monew.exception.MonewException;
 import jakarta.persistence.EntityManager;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +59,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
       if ("likeCount".equals(orderBy)) {
         if (cursor != null && after != null) {
           Long likeCursor = Long.parseLong(cursor);
-          Instant afterTime = Instant.parse(after);
+          LocalDateTime afterTime = LocalDateTime.parse(after);
           if (sortOrder == Order.ASC) {
             cursorCondition = comment.likeCount.gt(likeCursor)
                 .or(comment.likeCount.eq(likeCursor).and(comment.createdAt.gt(afterTime)));
@@ -70,7 +70,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
         }
       } else {
         if (after != null) {
-          Instant afterTime = Instant.parse(after);
+          LocalDateTime afterTime = LocalDateTime.parse(after);
           if (sortOrder == Order.ASC) {
             cursorCondition = comment.createdAt.gt(afterTime);
           } else {

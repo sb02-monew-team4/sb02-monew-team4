@@ -21,7 +21,7 @@ import com.team4.monew.exception.ErrorCode;
 import com.team4.monew.exception.MonewException;
 import com.team4.monew.interceptor.AuthInterceptor;
 import com.team4.monew.service.basic.BasicCommentService;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -68,7 +68,7 @@ class CommentControllerTest {
         content,
         0,
         false,
-        Instant.now()
+        LocalDateTime.now()
     );
 
     Mockito.when(commentService.register(any(UUID.class), any(CommentRegisterRequest.class)))
@@ -110,7 +110,7 @@ class CommentControllerTest {
         "테스트 댓글",
         2,
         true,
-        Instant.now()
+        LocalDateTime.now()
     );
 
     CursorPageResponseCommentDto response = new CursorPageResponseCommentDto(
@@ -168,14 +168,14 @@ class CommentControllerTest {
     CommentLikeDto dto = new CommentLikeDto(
         UUID.randomUUID(),
         userId,
-        Instant.now(),
+        LocalDateTime.now(),
         commentId,
         UUID.randomUUID(),
         UUID.randomUUID(),
         "nickname",
         "comment content",
         1,
-        Instant.now()
+        LocalDateTime.now()
     );
 
     Mockito.when(commentService.likeComment(eq(commentId), eq(userId)))
@@ -244,7 +244,7 @@ class CommentControllerTest {
         request.content(),
         0,
         false,
-        Instant.now()
+        LocalDateTime.now()
     );
 
     Mockito.when(commentService.update(eq(commentId), eq(userId), any()))
