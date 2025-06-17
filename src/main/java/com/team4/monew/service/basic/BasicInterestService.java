@@ -162,7 +162,6 @@ public class BasicInterestService implements InterestService {
     interest.updateKeywords(distinctKeywords);
 
     eventPublisher.publishEvent(new SubscriptionUpdatedEvent(interestId, distinctKeywords));
-
     return interestMapper.toDto(interest, null);
   }
 
