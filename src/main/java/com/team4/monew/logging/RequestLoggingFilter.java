@@ -34,7 +34,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
       response.addHeader("X-Request-ID", requestId);
       response.addHeader("X-Client-IP", clientIp);
 
-      log.info("[{}] [{}] {} {} - {}ms",
+      log.info("{} {} {} {} - {}ms",
           request.getMethod(),
           request.getRequestURI(),
           clientIp,

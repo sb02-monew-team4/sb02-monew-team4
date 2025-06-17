@@ -22,8 +22,9 @@ public class LogUploaderService {
   @Value("${logging.s3.bucket}")
   private String BUCKET_NAME;
 
-  @Scheduled(cron = "0 0 0 * * *")
+  @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
   public void uploadYesterdayLog() {
+    log.info("로그 업로드 시작");
     LocalDate yesterday = LocalDate.now().minusDays(1);
     String dateStr = yesterday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     String fileName = String.format("app-%s.log", dateStr);
