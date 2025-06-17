@@ -165,7 +165,7 @@ class InterestControllerTest {
             .param("direction", "ASC")
             .param("limit", "10")
             .param("keyword", "")
-            .requestAttr("authenticatedUserId", USER_ID)
+            .header("Monew-Request-User-ID", USER_ID.toString())
             .accept(MediaType.APPLICATION_JSON))
         .andDo(print())
         .andExpect(status().isOk())

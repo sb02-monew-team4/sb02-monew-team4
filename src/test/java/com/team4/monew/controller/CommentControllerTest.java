@@ -1,8 +1,8 @@
 package com.team4.monew.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -34,7 +34,6 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
 @WebMvcTest(controllers = CommentController.class,
     excludeFilters = {
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {AuthInterceptor.class,
@@ -55,6 +54,7 @@ class CommentControllerTest {
   @Test
   @DisplayName("댓글 등록")
   void registerComment() throws Exception {
+    UUID authenticatedUserId = UUID.randomUUID();
     UUID articleId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
     String content = "내용";
@@ -75,6 +75,7 @@ class CommentControllerTest {
         .thenReturn(response);
 
     mockMvc.perform(post("/api/comments")
+            .requestAttr("authenticatedUserId", authenticatedUserId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
@@ -95,41 +96,41 @@ class CommentControllerTest {
             .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isBadRequest());
   }
-
   @Test
-  @DisplayName("댓글 목록 조회")
-  void findComments() throws Exception {
-    UUID articleId = UUID.randomUUID();
-    UUID userId = UUID.randomUUID();
+  @DisplayName("댓글 목록 조회 - 정상 응답")
+  void getComments() throws Exception {
+    UUID articleId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    UUID userId = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    UUID commentId = UUID.fromString("33333333-3333-3333-3333-333333333333");
 
     CommentDto comment = new CommentDto(
-        UUID.randomUUID(),
+        commentId,
         articleId,
         userId,
         "닉네임",
-        "테스트 댓글",
-        2,
+        "테스트 댓글입니다",
+        5,
         true,
         LocalDateTime.now()
     );
 
     CursorPageResponseCommentDto response = new CursorPageResponseCommentDto(
         List.of(comment),
-        "nextCursor",
-        "nextAfter",
+        "nextCursorSample",
+        "nextAfterSample",
         1,
         1L,
         false
     );
 
     Mockito.when(commentService.getCommentsByArticleWithCursor(
-        any(UUID.class),
-        any(String.class),
-        any(String.class),
-        any(String.class),
-        any(String.class),
-        anyInt(),
-        any(UUID.class)
+        eq(articleId),
+        eq("createdAt"),
+        eq("desc"),
+        isNull(),
+        isNull(),
+        eq(10),
+        eq(userId)
     )).thenReturn(response);
 
     mockMvc.perform(get("/api/comments")
@@ -139,7 +140,8 @@ class CommentControllerTest {
             .param("limit", "10")
             .header("Monew-Request-User-ID", userId))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.content[0].content").value("테스트 댓글"));
+        .andExpect(jsonPath("$.content[0].content").value("테스트 댓글입니다"))
+        .andExpect(jsonPath("$.content[0].likeCount").value(5));
   }
 
   @Test
