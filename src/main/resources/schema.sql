@@ -32,7 +32,7 @@ alter table interests
 create table article_interests
 (
     article_id  uuid not null
-        constraint fk_article_interests_article references article (id) on delete cascade,
+        constraint fk_article_interests_article references articles (id) on delete cascade,
     interest_id uuid not null
         constraint fk_article_interests_interest references interests (id) on delete cascade,
     primary key (article_id, interest_id)
@@ -71,7 +71,7 @@ create table article_views
     id         uuid                        not null primary key,
     viewed_at  timestamp(6) with time zone not null,
     article_id uuid                        not null
-        constraint fk_article_views_article references article (id) on delete cascade,
+        constraint fk_article_views_article references articles (id) on delete cascade,
     user_id    uuid                        not null
         constraint fk_article_views_user references users (id) on delete cascade,
     constraint uq_article_views_article_user unique (article_id, user_id)
@@ -89,7 +89,7 @@ create table comments
     like_count bigint,
     updated_at timestamp(6) with time zone not null,
     article_id uuid                        not null
-        constraint fk_comments_article references article (id),
+        constraint fk_comments_article references articles (id),
     user_id    uuid                        not null
         constraint fk_comments_user references users (id)
 );
