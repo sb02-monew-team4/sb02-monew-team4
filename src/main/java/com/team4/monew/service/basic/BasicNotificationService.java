@@ -11,7 +11,9 @@ import com.team4.monew.mapper.NotificationMapper;
 import com.team4.monew.repository.NotificationRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.NotificationService;
+import com.team4.monew.util.DateTimeUtils;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
@@ -66,15 +68,16 @@ public class BasicNotificationService implements NotificationService {
   @Transactional(readOnly = true)
   public CursorPageResponseNotificationDto findUnconfirmedByCursor(
       String cursor,
-      Instant after,
+      String after,
       int limit,
       UUID userId
   ) {
-    Instant cursorInstant = (cursor != null && !cursor.isBlank()) ? Instant.parse(cursor) : null;
+    LocalDateTime cursorLocalDateTime = DateTimeUtils.parseToLocalDateTime(cursor);
+    LocalDateTime afterDateTime = DateTimeUtils.parseToLocalDateTime(after);
 
     // hasNext 판별 위해 limit+1 개로 조회
     List<Notification> notifications = notificationRepository
-        .findUnconfirmedByCursor(cursorInstant, after, limit + 1, userId);
+        .findUnconfirmedByCursor(cursorLocalDateTime, afterDateTime, limit + 1, userId);
 
     boolean hasNext = notifications.size() > limit;
 
@@ -83,9 +86,9 @@ public class BasicNotificationService implements NotificationService {
     List<NotificationDto> contents = notificationMapper.toDtoList(limitedNotifications);
 
     String nextCursor = null;
-    Instant nextAfter = null;
+    LocalDateTime nextAfter = null;
     if (!contents.isEmpty()) {
-      Instant lastCreatedAt = contents.get(contents.size() - 1).createdAt();
+      LocalDateTime lastCreatedAt = contents.get(contents.size() - 1).createdAt();
       nextCursor = lastCreatedAt.toString();
       nextAfter = lastCreatedAt;
     }
