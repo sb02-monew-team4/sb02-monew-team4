@@ -34,6 +34,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
 @WebMvcTest(controllers = CommentController.class,
     excludeFilters = {
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {AuthInterceptor.class,
@@ -96,6 +97,7 @@ class CommentControllerTest {
             .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isBadRequest());
   }
+
   @Test
   @DisplayName("댓글 목록 조회 - 정상 응답")
   void getComments() throws Exception {
@@ -200,7 +202,7 @@ class CommentControllerTest {
 
     mockMvc.perform(post("/api/comments/" + commentId + "/comment-likes")
             .header("Monew-Request-User-ID", userId))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -287,7 +289,7 @@ class CommentControllerTest {
     Mockito.doNothing().when(commentService).softDelete(commentId, userId);
 
     mockMvc.perform(delete("/api/comments/" + commentId)
-        .header("Monew-Request-User-ID", userId))
+            .header("Monew-Request-User-ID", userId))
         .andExpect(status().isNoContent());
   }
 
@@ -329,6 +331,6 @@ class CommentControllerTest {
 
     mockMvc.perform(delete("/api/comments/" + commentId + "/hard")
             .header("Monew-Request-User-ID", userId))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isNotFound());
   }
 }
