@@ -11,6 +11,7 @@ import com.team4.monew.dto.article.ArticleViewDto;
 import com.team4.monew.interceptor.AuthInterceptor;
 import com.team4.monew.service.ArticleService;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,7 @@ public class ArticleControllerTest {
     ArticleViewDto responseDto = new ArticleViewDto(
         UUID.randomUUID(),
         userId,
-        Instant.now(),
+        LocalDateTime.now(),
         newsId,
         "NAVER",
         "https://news.naver.com/",

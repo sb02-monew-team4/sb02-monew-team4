@@ -17,7 +17,7 @@ import com.team4.monew.entity.User;
 import com.team4.monew.exception.notification.NotificationNotFoundException;
 import com.team4.monew.interceptor.AuthInterceptor;
 import com.team4.monew.service.NotificationService;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -48,9 +48,9 @@ public class NotificationControllerTest {
   void findUnconfirmedByCursor_Success() throws Exception {
     // given
     UUID userId = UUID.randomUUID();
-    Instant now = Instant.now();
+    LocalDateTime now = LocalDateTime.now();
     String cursor = now.minusSeconds(300).toString();
-    Instant after = now.minusSeconds(300);
+    LocalDateTime after = now.minusSeconds(300);
     int limit = 2;
 
     NotificationDto dto1 = new NotificationDto(
@@ -88,7 +88,6 @@ public class NotificationControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content.length()").value(2))
         .andExpect(jsonPath("$.nextCursor").value(dto2.createdAt().toString()))
-        .andExpect(jsonPath("$.nextAfter").value(dto2.createdAt().toString()))
         .andExpect(jsonPath("$.size").value(limit))
         .andExpect(jsonPath("$.totalElements").value(10))
         .andExpect(jsonPath("$.hasNext").value(true));

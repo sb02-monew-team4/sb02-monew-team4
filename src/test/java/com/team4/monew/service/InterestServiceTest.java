@@ -23,7 +23,7 @@ import com.team4.monew.repository.InterestRepository;
 import com.team4.monew.repository.SubscriptionRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicInterestService;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -148,8 +148,8 @@ class InterestServiceTest {
         UUID.randomUUID(),
         "금융",
         0L,
-        Instant.now(),
-        Instant.now(),
+        LocalDateTime.now(),
+        LocalDateTime.now(),
         new ArrayList<>(),
         new ArrayList<>(),
         new HashSet<>()

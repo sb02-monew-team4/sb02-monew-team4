@@ -9,6 +9,7 @@ import com.team4.monew.entity.InterestKeyword;
 import com.team4.monew.repository.InterestRepository;
 import com.team4.monew.service.filter.KeywordFilterService;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -90,7 +91,7 @@ public class KeywordFilterServiceTest {
 
   private Interest createInterest(String name, List<String> keywords) {
     Interest interest = new Interest(
-        UUID.randomUUID(), name, 0L, Instant.now(), Instant.now(),
+        UUID.randomUUID(), name, 0L, LocalDateTime.now(), LocalDateTime.now(),
         new ArrayList<>(), new ArrayList<>(), new HashSet<>()
     );
 

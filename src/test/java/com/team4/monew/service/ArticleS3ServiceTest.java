@@ -462,4 +462,4 @@ class ArticleS3ServiceTest {
       assertTrue(result.isEmpty()); // 파싱 실패 시 빈 리스트 반환
     }
   }
-
+}

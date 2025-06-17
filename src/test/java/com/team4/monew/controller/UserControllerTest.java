@@ -20,7 +20,7 @@ import com.team4.monew.entity.User;
 import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.UserService;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -57,7 +57,7 @@ public class UserControllerTest {
         "test@example.com", "testUser", "password123"
     );
 
-    UserDto userDto = new UserDto(userId, "test@example.com", "testUser", Instant.now());
+    UserDto userDto = new UserDto(userId, "test@example.com", "testUser", LocalDateTime.now());
 
     given(userService.register(request)).willReturn(userDto);
 
@@ -102,7 +102,7 @@ public class UserControllerTest {
         userId,
         "test@example.com",
         "newTestUser",
-        Instant.now()
+        LocalDateTime.now()
     );
 
     // Interceptor에서 인증

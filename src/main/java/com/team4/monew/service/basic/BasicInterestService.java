@@ -21,7 +21,9 @@ import com.team4.monew.repository.InterestRepository;
 import com.team4.monew.repository.SubscriptionRepository;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.InterestService;
+import com.team4.monew.util.DateTimeUtils;
 import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -96,8 +98,9 @@ public class BasicInterestService implements InterestService {
       int limit,
       UUID requestUserId
   ) {
+    LocalDateTime afterDateTime = DateTimeUtils.parseToLocalDateTime(after);
     List<Interest> interests = interestRepository.findInterestsWithCursorPaging(
-        keyword, orderBy, direction, cursor, after, limit
+        keyword, orderBy, direction, cursor, afterDateTime, limit
     );
 
     List<InterestDto> dtoList = interests.stream()

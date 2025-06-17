@@ -16,7 +16,7 @@ import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.mapper.UserMapper;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicAuthService;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -48,7 +48,7 @@ public class AuthServiceTest {
     UUID userId = UUID.randomUUID();
 
     User user = User.create(email, nickname, request.password());
-    UserDto userDto = new UserDto(userId, email, nickname, Instant.now());
+    UserDto userDto = new UserDto(userId, email, nickname, LocalDateTime.now());
 
     given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
     given(userMapper.toDto(user)).willReturn(userDto);

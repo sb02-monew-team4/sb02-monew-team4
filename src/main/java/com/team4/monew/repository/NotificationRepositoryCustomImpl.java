@@ -4,7 +4,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team4.monew.entity.Notification;
 import com.team4.monew.entity.QNotification;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ public class NotificationRepositoryCustomImpl implements NotificationRepositoryC
 
   @Override
   public List<Notification> findUnconfirmedByCursor(
-      Instant cursor, Instant after, int limit, UUID userId
+      LocalDateTime cursor, LocalDateTime after, int limit, UUID userId
   ) {
     QNotification notification = QNotification.notification;
 
@@ -24,7 +24,7 @@ public class NotificationRepositoryCustomImpl implements NotificationRepositoryC
     whereCondition.and(notification.user.id.eq(userId));
     whereCondition.and(notification.confirmed.isFalse());
     if (after != null) {
-      whereCondition.and(notification.createdAt.goe(after));
+      whereCondition.and(notification.createdAt.gt(after));
     }
     if (cursor != null) {
       whereCondition.and(notification.createdAt.gt(cursor));
