@@ -72,6 +72,7 @@ class ArticleSchedulerTest {
   private List<Article> testRssArticles;
   private List<Article> testNaverArticles;
   private List<Article> testFilteredArticles;
+  private List<Article> testConnectedNaverArticles;
 
   private User user1;
   private User user2;
@@ -91,9 +92,15 @@ class ArticleSchedulerTest {
         createTestArticle("NAVER", "https://example.com/naver2", "네이버 기사 제목 2")
     );
 
-    // 테스트용 필터링된 기사 데이터 생성
+    // 필터링된 RSS 기사 데이터 생성
     testFilteredArticles = Arrays.asList(
         createTestArticle("RSS_SOURCE_1", "https://example.com/filtered1", "필터링된 기사 제목")
+    );
+
+    // Article - Interest 연결된 네이버 기사 데이터 생성
+    testConnectedNaverArticles = Arrays.asList(
+        createTestArticle("NAVER", "https://example.com/naver1", "네이버 기사 제목 1"),
+        createTestArticle("NAVER", "https://example.com/naver2", "네이버 기사 제목 2")
     );
   }
 
@@ -146,12 +153,13 @@ class ArticleSchedulerTest {
     when(rssCollectorService.collectFromAllSources()).thenReturn(testRssArticles);
     when(naverApiCollectorService.collectArticles()).thenReturn(testNaverArticles);
     when(keywordFilterService.filterArticles(testRssArticles)).thenReturn(testFilteredArticles);
+    when(keywordFilterService.filterArticles(testNaverArticles)).thenReturn(testConnectedNaverArticles);
     when(articleRepository.existsByOriginalLink(anyString())).thenReturn(false);
 
     // 이벤트 발행 시 필요한 데이터 세팅 - 관심사, 구독자
     List<Article> totalArticles = new ArrayList<>();
     totalArticles.addAll(testFilteredArticles);
-    totalArticles.addAll(testNaverArticles);
+    totalArticles.addAll(testConnectedNaverArticles);
     setUpForPublishEvent(totalArticles);
 
     // When
@@ -161,6 +169,7 @@ class ArticleSchedulerTest {
     verify(rssCollectorService, times(1)).collectFromAllSources();
     verify(naverApiCollectorService, times(1)).collectArticles();
     verify(keywordFilterService, times(1)).filterArticles(testRssArticles);
+    verify(keywordFilterService, times(1)).filterArticles(testNaverArticles);
 
     // 저장 로직 검증
     verify(articleRepository, times(3)).existsByOriginalLink(anyString());
@@ -207,10 +216,11 @@ class ArticleSchedulerTest {
     when(naverApiCollectorService.collectArticles()).thenReturn(testNaverArticles);
     when(keywordFilterService.filterArticles(Collections.emptyList())).thenReturn(
         Collections.emptyList());
+    when(keywordFilterService.filterArticles(testNaverArticles)).thenReturn(testConnectedNaverArticles);
     when(articleRepository.existsByOriginalLink(anyString())).thenReturn(false);
 
     // 이벤트 발행 시 필요한 데이터 세팅 - 관심사, 구독자
-    setUpForPublishEvent(testNaverArticles);
+    setUpForPublishEvent(testConnectedNaverArticles);
 
     // When
     articleScheduler.hourlyArticleProcessing();
@@ -218,14 +228,14 @@ class ArticleSchedulerTest {
     // Then
     verify(naverApiCollectorService, times(1)).collectArticles();
 
-    // 네이버 기사들이 직접 저장되는지 확인 (필터링 없이)
-    for (Article article : testNaverArticles) {
+    // 네이버 기사들이 직접 저장되는지 확인
+    for (Article article : testConnectedNaverArticles) {
       verify(articleRepository, times(1)).existsByOriginalLink(article.getOriginalLink());
       verify(articleRepository, times(1)).save(article);
     }
 
     // 이벤트 발행 검증
-    verifyPublishEvent(testNaverArticles);
+    verifyPublishEvent(testConnectedNaverArticles);
   }
 
   @Test
@@ -274,26 +284,27 @@ class ArticleSchedulerTest {
     when(naverApiCollectorService.collectArticles()).thenReturn(testNaverArticles);
     when(keywordFilterService.filterArticles(Collections.emptyList())).thenReturn(
         Collections.emptyList());
+    when(keywordFilterService.filterArticles(testNaverArticles)).thenReturn(testConnectedNaverArticles);
 
     // 첫 번째 기사는 중복, 두 번째는 새로운 기사
     when(articleRepository.existsByOriginalLink(
-        testNaverArticles.get(0).getOriginalLink())).thenReturn(true);
+        testConnectedNaverArticles.get(0).getOriginalLink())).thenReturn(true);
     when(articleRepository.existsByOriginalLink(
-        testNaverArticles.get(1).getOriginalLink())).thenReturn(false);
+        testConnectedNaverArticles.get(1).getOriginalLink())).thenReturn(false);
 
     // 이벤트 발행 시 필요한 데이터 세팅 - 관심사, 구독자
-    setUpForPublishEvent(List.of(testNaverArticles.get(1)));
+    setUpForPublishEvent(List.of(testConnectedNaverArticles.get(1)));
 
     // When
     articleScheduler.hourlyArticleProcessing();
 
     // Then
     verify(articleRepository, times(2)).existsByOriginalLink(anyString());
-    verify(articleRepository, never()).save(testNaverArticles.get(0)); // 중복 기사는 저장되지 않음
-    verify(articleRepository, times(1)).save(testNaverArticles.get(1)); // 새로운 기사만 저장됨
+    verify(articleRepository, never()).save(testConnectedNaverArticles.get(0)); // 중복 기사는 저장되지 않음
+    verify(articleRepository, times(1)).save(testConnectedNaverArticles.get(1)); // 새로운 기사만 저장됨
 
     // 이벤트 발행 검증
-    verifyPublishEvent(List.of(testNaverArticles.get(1)));
+    verifyPublishEvent(List.of(testConnectedNaverArticles.get(1)));
   }
 
   @Test
@@ -311,7 +322,7 @@ class ArticleSchedulerTest {
     // Then
     verify(rssCollectorService, times(1)).collectFromAllSources();
     verify(naverApiCollectorService, times(1)).collectArticles();
-    verify(keywordFilterService, times(1)).filterArticles(Collections.emptyList());
+    verify(keywordFilterService, times(2)).filterArticles(Collections.emptyList());
 
     // 저장 관련 메서드는 호출되지 않아야 함
     verify(articleRepository, never()).existsByOriginalLink(anyString());
@@ -332,8 +343,9 @@ class ArticleSchedulerTest {
 
     when(rssCollectorService.collectFromAllSources()).thenReturn(Collections.emptyList());
     when(naverApiCollectorService.collectArticles()).thenReturn(mixedArticles);
-    when(keywordFilterService.filterArticles(Collections.emptyList())).thenReturn(
-        Collections.emptyList());
+    when(keywordFilterService.filterArticles(Collections.emptyList())).thenReturn(Collections.emptyList());
+    //네이버 기사도 filterArticles를 거쳐서 Article - Interest 연결
+    when(keywordFilterService.filterArticles(mixedArticles)).thenReturn(mixedArticles);
 
     when(articleRepository.existsByOriginalLink("https://new1.com")).thenReturn(false);
     when(articleRepository.existsByOriginalLink("https://duplicate.com")).thenReturn(true);
@@ -365,13 +377,14 @@ class ArticleSchedulerTest {
     // Given
     when(rssCollectorService.collectFromAllSources()).thenReturn(testRssArticles);
     when(naverApiCollectorService.collectArticles()).thenReturn(testNaverArticles);
-    when(keywordFilterService.filterArticles(any())).thenReturn(testFilteredArticles);
+    when(keywordFilterService.filterArticles(testRssArticles)).thenReturn(testFilteredArticles);
+    when(keywordFilterService.filterArticles(testNaverArticles)).thenReturn(testConnectedNaverArticles);
     when(articleRepository.existsByOriginalLink(anyString())).thenReturn(false);
 
     // 이벤트 발행 시 필요한 데이터 세팅 - 관심사, 구독자
     List<Article> totalArticles = new ArrayList<>();
     totalArticles.addAll(testFilteredArticles);
-    totalArticles.addAll(testNaverArticles);
+    totalArticles.addAll(testConnectedNaverArticles);
     setUpForPublishEvent(totalArticles);
 
     // When
@@ -381,6 +394,7 @@ class ArticleSchedulerTest {
     verify(rssCollectorService, times(1)).collectFromAllSources();
     verify(naverApiCollectorService, times(1)).collectArticles();
     verify(keywordFilterService, times(1)).filterArticles(testRssArticles);
+    verify(keywordFilterService, times(1)).filterArticles(testNaverArticles);
     verify(articleRepository, atLeastOnce()).existsByOriginalLink(anyString());
     verify(articleRepository, atLeastOnce()).save(any(Article.class));
 
