@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -55,11 +55,11 @@ public class Notification {
 
   @CreatedDate
   @Column(updatable = false, nullable = false)
-  private Instant createdAt;
+  private LocalDateTime createdAt;
 
   @LastModifiedDate
   @Column(nullable = false)
-  private Instant updatedAt;
+  private LocalDateTime updatedAt;
 
   public static Notification create(User user, String content, UUID resourceId,
       ResourceType resourceType) {
