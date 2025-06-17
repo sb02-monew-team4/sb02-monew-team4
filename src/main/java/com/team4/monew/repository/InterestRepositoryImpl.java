@@ -12,7 +12,7 @@ import com.team4.monew.entity.QInterestKeyword;
 import com.team4.monew.exception.ErrorCode;
 import com.team4.monew.exception.MonewException;
 import jakarta.persistence.EntityManager;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class InterestRepositoryImpl implements InterestRepositoryCustom {
@@ -29,7 +29,7 @@ public class InterestRepositoryImpl implements InterestRepositoryCustom {
       String orderBy,
       String direction,
       String cursor,
-      String after,
+      LocalDateTime after,
       int limit
   ) {
 
@@ -64,7 +64,7 @@ public class InterestRepositoryImpl implements InterestRepositoryCustom {
     return query.fetch();
   }
 
-  private BooleanExpression buildCursorPredicate(QInterest interest, String orderBy, String direction, String cursor, String after) {
+  private BooleanExpression buildCursorPredicate(QInterest interest, String orderBy, String direction, String cursor, LocalDateTime after) {
     if (cursor == null || after == null) return null;
 
     ComparableExpression<?> cursorField;
@@ -75,18 +75,18 @@ public class InterestRepositoryImpl implements InterestRepositoryCustom {
       case "name" -> {
         cursorField = interest.name;
         if (isAsc) {
-          predicate = interest.name.gt(cursor).or(interest.name.eq(cursor).and(interest.createdAt.gt(Instant.parse(after))));
+          predicate = interest.name.gt(cursor).or(interest.name.eq(cursor).and(interest.createdAt.gt(after)));
         } else {
-          predicate = interest.name.lt(cursor).or(interest.name.eq(cursor).and(interest.createdAt.lt(Instant.parse(after))));
+          predicate = interest.name.lt(cursor).or(interest.name.eq(cursor).and(interest.createdAt.lt(after)));
         }
       }
       case "subscriberCount" -> {
         NumberPath<Long> subscriberCount = interest.subscriberCount;
         Long cursorValue = Long.valueOf(cursor);
         if (isAsc) {
-          predicate = subscriberCount.gt(cursorValue).or(subscriberCount.eq(cursorValue).and(interest.createdAt.gt(Instant.parse(after))));
+          predicate = subscriberCount.gt(cursorValue).or(subscriberCount.eq(cursorValue).and(interest.createdAt.gt(after)));
         } else {
-          predicate = subscriberCount.lt(cursorValue).or(subscriberCount.eq(cursorValue).and(interest.createdAt.lt(Instant.parse(after))));
+          predicate = subscriberCount.lt(cursorValue).or(subscriberCount.eq(cursorValue).and(interest.createdAt.lt(after)));
         }
       }
     }

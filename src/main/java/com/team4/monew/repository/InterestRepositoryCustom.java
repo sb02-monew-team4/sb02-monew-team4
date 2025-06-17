@@ -1,6 +1,7 @@
 package com.team4.monew.repository;
 
 import com.team4.monew.entity.Interest;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface InterestRepositoryCustom {
@@ -9,7 +10,7 @@ public interface InterestRepositoryCustom {
       String orderBy,
       String direction,
       String cursor,
-      String after,
+      LocalDateTime after,
       int limit
   );
 
