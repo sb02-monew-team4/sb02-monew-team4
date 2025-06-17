@@ -258,7 +258,7 @@ public class NotificationServiceTest {
 
     // when
     CursorPageResponseNotificationDto result = notificationService.findUnconfirmedByCursor(
-        cursorString, after, limit, userId
+        cursorString, after.toString(), limit, userId
     );
 
     // then
