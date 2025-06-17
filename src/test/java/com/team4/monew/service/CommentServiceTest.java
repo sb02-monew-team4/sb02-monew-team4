@@ -121,7 +121,7 @@ public class CommentServiceTest {
         comment.getContent(),
         0,
         false,
-        Instant.now());
+        LocalDateTime.now());
 
     when(commentMapper.toDto(any(Comment.class), any(UUID.class))).thenReturn(dto);
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -163,7 +163,7 @@ public class CommentServiceTest {
       basicCommentService.register(userId, request);
     });
 
-    assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+    assertEquals(ErrorCode.ARTICLE_NOT_FOUND, exception.getErrorCode());
   }
 
   @Test
@@ -490,7 +490,7 @@ public class CommentServiceTest {
         updatedContent,
         0,
         false,
-        Instant.now());
+        LocalDateTime.now());
 
     when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
     when(commentRepository.save(any(Comment.class))).thenReturn(comment);
