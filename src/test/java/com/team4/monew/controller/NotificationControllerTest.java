@@ -76,8 +76,8 @@ public class NotificationControllerTest {
         true
     );
 
-//    given(notificationService.findUnconfirmedByCursor(cursor, after, limit, userId))
-//        .willReturn(responseDto);
+    given(notificationService.findUnconfirmedByCursor(cursor, after.toString(), limit, userId))
+        .willReturn(responseDto);
 
     // when & then
     mockMvc.perform(get("/api/notifications")
