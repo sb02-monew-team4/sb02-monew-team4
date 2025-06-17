@@ -35,29 +35,26 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class InterestServiceTest {
 
+  private final UUID userId = UUID.randomUUID();
   @InjectMocks
   private BasicInterestService basicInterestService;
-
   @Mock
   private InterestRepository interestRepository;
-
   @Mock
   private SubscriptionRepository subscriptionRepository;
-
+  @Mock
+  private ApplicationEventPublisher eventPublisher;
   @Mock
   private UserRepository userRepository;
-
   @Mock
   private InterestMapper interestMapper;
-
   @Mock
   private SubscriptionMapper subscriptionMapper;
-
-  private final UUID userId = UUID.randomUUID();
 
   @Test
   @DisplayName("관심사 등록 성공 - 유사 이름 없음, 키워드 1개 이상")
@@ -73,7 +70,8 @@ class InterestServiceTest {
     Interest interestEntity = mock(Interest.class);
     when(interestMapper.toEntity(request)).thenReturn(interestEntity);
 
-    InterestDto expectedDto = new InterestDto(UUID.randomUUID(), "경제", List.of("주식", "금리"), 0, false);
+    InterestDto expectedDto = new InterestDto(UUID.randomUUID(), "경제", List.of("주식", "금리"), 0,
+        false);
     when(interestMapper.toDto(interestEntity, userId)).thenReturn(expectedDto);
 
     // when
@@ -283,7 +281,8 @@ class InterestServiceTest {
     SubscriptionDto expectedDto = mock(SubscriptionDto.class);
 
     when(interestRepository.findById(interestId)).thenReturn(Optional.of(interest));
-    when(subscriptionRepository.findByUserIdAndInterestId(userId, interestId)).thenReturn(Optional.empty());
+    when(subscriptionRepository.findByUserIdAndInterestId(userId, interestId)).thenReturn(
+        Optional.empty());
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
     when(subscriptionMapper.toDto(any(Subscription.class))).thenReturn(expectedDto);
@@ -317,7 +316,8 @@ class InterestServiceTest {
 
     Interest interest = mock(Interest.class);
     when(interestRepository.findById(interestId)).thenReturn(Optional.of(interest));
-    when(subscriptionRepository.findByUserIdAndInterestId(userId, interestId)).thenReturn(Optional.empty());
+    when(subscriptionRepository.findByUserIdAndInterestId(userId, interestId)).thenReturn(
+        Optional.empty());
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     MonewException ex = assertThrows(
@@ -338,7 +338,8 @@ class InterestServiceTest {
     Subscription subscription = mock(Subscription.class);
 
     when(interestRepository.findById(interestId)).thenReturn(Optional.of(interest));
-    when(subscriptionRepository.findByUserIdAndInterestId(userId, interestId)).thenReturn(Optional.of(subscription));
+    when(subscriptionRepository.findByUserIdAndInterestId(userId, interestId)).thenReturn(
+        Optional.of(subscription));
 
     basicInterestService.unsubscribeInterest(interestId, userId);
 
@@ -354,7 +355,8 @@ class InterestServiceTest {
 
     Interest interest = mock(Interest.class);
     when(interestRepository.findById(interestId)).thenReturn(Optional.of(interest));
-    when(subscriptionRepository.findByUserIdAndInterestId(userId, interestId)).thenReturn(Optional.empty());
+    when(subscriptionRepository.findByUserIdAndInterestId(userId, interestId)).thenReturn(
+        Optional.empty());
 
     MonewException ex = assertThrows(
         MonewException.class,
