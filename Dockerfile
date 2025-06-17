@@ -24,9 +24,7 @@ VOLUME /tmp
 
 COPY --from=builder /app/build/libs/${PROJECT_NAME}-${PROJECT_VERSION}.jar app.jar
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
 EXPOSE 80
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
