@@ -15,9 +15,14 @@ FROM amazoncorretto:17
 
 WORKDIR /app
 
+# 컨테이너 시스템 타임존 설정
+ENV TZ Asia/Seoul
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 ENV PROJECT_NAME=monew
 ENV PROJECT_VERSION=0.0.1-SNAPSHOT
-ENV JVM_OPTS=""
+# JVM 타임존 설정 옵션 추가
+ENV JVM_OPTS="-Duser.timezone=Asia/Seoul"
 ENV SERVER_PORT=80
 
 VOLUME /tmp
@@ -27,4 +32,4 @@ COPY --from=builder /app/build/libs/${PROJECT_NAME}-${PROJECT_VERSION}.jar app.j
 
 EXPOSE 80
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "$(JVM_OPTS)", "-jar", "app.jar"]
