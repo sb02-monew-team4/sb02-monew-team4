@@ -17,7 +17,6 @@ import com.team4.monew.exception.user.UserNotFoundException;
 import com.team4.monew.mapper.UserMapper;
 import com.team4.monew.repository.UserRepository;
 import com.team4.monew.service.basic.BasicUserService;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,6 +37,9 @@ public class UserServiceTest {
 
   @Mock
   private UserRepository userRepository;
+
+  @Mock
+  private UserActivityService userActivityService;
 
   @Mock
   private UserMapper userMapper;

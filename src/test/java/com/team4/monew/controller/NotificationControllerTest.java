@@ -32,7 +32,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(controllers = NotificationController.class,
     excludeFilters = {
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {AuthInterceptor.class, WebConfig.class})
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {AuthInterceptor.class,
+            WebConfig.class})
     }
 )
 public class NotificationControllerTest {
@@ -75,7 +76,7 @@ public class NotificationControllerTest {
         true
     );
 
-    given(notificationService.findUnconfirmedByCursor(cursor, after, limit, userId))
+    given(notificationService.findUnconfirmedByCursor(cursor, after.toString(), limit, userId))
         .willReturn(responseDto);
 
     // when & then
@@ -99,10 +100,13 @@ public class NotificationControllerTest {
     // given
     UUID userId = UUID.randomUUID();
 
-    Notification updatedNotification1 = Notification.create(mock(User.class), "알림메시지1", UUID.randomUUID(), ResourceType.COMMENT);
-    Notification updatedNotification2 = Notification.create(mock(User.class), "알림메시지2", UUID.randomUUID(), ResourceType.COMMENT);
+    Notification updatedNotification1 = Notification.create(mock(User.class), "알림메시지1",
+        UUID.randomUUID(), ResourceType.COMMENT);
+    Notification updatedNotification2 = Notification.create(mock(User.class), "알림메시지2",
+        UUID.randomUUID(), ResourceType.COMMENT);
 
-    given(notificationService.updateAll(userId)).willReturn(List.of(updatedNotification1, updatedNotification2));
+    given(notificationService.updateAll(userId)).willReturn(
+        List.of(updatedNotification1, updatedNotification2));
 
     // when & then
     mockMvc.perform(patch("/api/notifications")
@@ -137,7 +141,8 @@ public class NotificationControllerTest {
     UUID userId = UUID.randomUUID();
     UUID notificationId = UUID.randomUUID();
 
-    Notification updatedNotification = Notification.create(mock(User.class), "알림메시지", UUID.randomUUID(), ResourceType.COMMENT);
+    Notification updatedNotification = Notification.create(mock(User.class), "알림메시지",
+        UUID.randomUUID(), ResourceType.COMMENT);
 
     given(notificationService.update(notificationId, userId)).willReturn(updatedNotification);
 
