@@ -3,7 +3,6 @@ package com.team4.monew.controller;
 import com.team4.monew.dto.notifications.CursorPageResponseNotificationDto;
 import com.team4.monew.entity.Notification;
 import com.team4.monew.service.NotificationService;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -26,9 +26,9 @@ public class NotificationController {
 
   @GetMapping
   public ResponseEntity<CursorPageResponseNotificationDto> findUnconfirmed(
-      String cursor,
-      Instant after,
-      int limit,
+      @RequestParam(required = false) String cursor,
+      @RequestParam(required = false) String after,
+      @RequestParam int limit,
       @RequestHeader("Monew-Request-User-ID") UUID userId
   ){
     CursorPageResponseNotificationDto unconfirmedNotifications = notificationService.findUnconfirmedByCursor(
