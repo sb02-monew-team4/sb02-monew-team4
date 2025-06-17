@@ -56,7 +56,7 @@ public class KeywordFilterServiceTest {
   @DisplayName("키워드가 포함된 기사만 필터링되어야 한다.")
   void shouldFilterArticleContainingKeywords() {
     // given
-    when(interestRepository.findAllWithKeywords())
+    when(interestRepository.findAllSubscribedInterestsWithKeywords())
         .thenReturn(List.of(techInterest, sportsInterest));
 
     List<Article> inputArticles = List.of(techArticle, sportsArticle, unrelatedArticle);
@@ -77,7 +77,7 @@ public class KeywordFilterServiceTest {
     Article mixedArticle = createArticle("스프링으로 축구 게임 개발",
         "스프링 프레임워크로 축구 게임을 만드는 방법은 ...");
 
-    when(interestRepository.findAllWithKeywords())
+    when(interestRepository.findAllSubscribedInterestsWithKeywords())
         .thenReturn(List.of(techInterest, sportsInterest));
 
     // when
