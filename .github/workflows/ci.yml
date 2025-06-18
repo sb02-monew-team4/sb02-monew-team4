@@ -5,6 +5,7 @@ on:
     branches:
       - 'dev/**'
       - dev
+      - main
 
 jobs:
   test:
@@ -42,3 +43,4 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/reports/jacoco/test/jacocoTestReport.xml
