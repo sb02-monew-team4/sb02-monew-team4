@@ -11,7 +11,6 @@ import com.team4.monew.dto.article.CursorPageResponseArticleDto;
 import com.team4.monew.entity.QArticle;
 import com.team4.monew.entity.QInterest;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Set;
@@ -69,7 +68,7 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
             after,
             orderBy,
             direction))
-        .orderBy(getOrderSpecifier(orderBy, direction))
+        .orderBy(getOrderSpecifiers(orderBy, direction))
         .limit(limit + 1)
         .fetch();
 
@@ -227,29 +226,33 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
               : article.viewCount.gt(cursorVal);
         }
         default -> {
-          LocalDateTime cursorDateTime = LocalDateTime.parse(cursor);
+          // Instant.parse로 ISO-8601 문자열 파싱
+          Instant cursorInstant = Instant.parse(cursor);
           yield desc
-              ? article.publishedDate.lt(Instant.from(cursorDateTime))
-              : article.publishedDate.gt(Instant.from(cursorDateTime));
+              ? article.publishedDate.lt(cursorInstant)
+              : article.publishedDate.gt(cursorInstant);
         }
       };
     } catch (DateTimeParseException | NumberFormatException e) {
       log.warn("커서 파싱 실패: cursor={}, orderBy={}", cursor, orderBy, e);
-      return null;
+      throw e;
     }
   }
 
-  private OrderSpecifier<?> getOrderSpecifier(String orderBy, String direction) {
+  private OrderSpecifier<?>[] getOrderSpecifiers(String orderBy, String direction) {
     boolean isDesc = "DESC".equalsIgnoreCase(direction);
 
     return switch (orderBy) {
       case "commentCount" -> isDesc ?
-          article.commentCount.desc() : article.commentCount.asc();
+          new OrderSpecifier<?>[]{article.commentCount.desc(), article.id.desc()} :
+          new OrderSpecifier<?>[]{article.commentCount.asc(), article.id.asc()};
       case "viewCount" -> isDesc ?
-          article.viewCount.desc() : article.viewCount.asc();
+          new OrderSpecifier<?>[]{article.viewCount.desc(), article.id.desc()} :
+          new OrderSpecifier<?>[]{article.viewCount.asc(), article.id.asc()};
       case "publishDate" -> isDesc ?
-          article.publishedDate.desc() : article.publishedDate.asc();
-      default -> article.publishedDate.desc(); // 기본값
+          new OrderSpecifier<?>[]{article.publishedDate.desc(), article.id.desc()} :
+          new OrderSpecifier<?>[]{article.publishedDate.asc(), article.id.asc()};
+      default -> new OrderSpecifier<?>[]{article.publishedDate.desc(), article.id.desc()};
     };
   }
 
