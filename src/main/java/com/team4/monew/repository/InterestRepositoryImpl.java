@@ -56,7 +56,6 @@ public class InterestRepositoryImpl implements InterestRepositoryCustom {
 
     JPQLQuery<Interest> query = queryFactory
         .selectFrom(interest)
-        .distinct()
         .leftJoin(interest.keywords, interestKeyword)
         .where(keywordFilter, cursorPredicate)
         .orderBy(getOrderSpecifiers(interest, orderBy, direction))
