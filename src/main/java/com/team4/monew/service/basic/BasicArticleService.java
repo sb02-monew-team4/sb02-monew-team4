@@ -50,6 +50,17 @@ public class BasicArticleService implements ArticleService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> UserNotFoundException.byId(userId));
 
+    if (articleViewRepository.existsByArticleIdAndUserId(articleId, userId)) {
+      log.info("ArticleView already exists for article ID: {}, user ID: {}",
+          articleId, userId);
+
+      ArticleView existingView = articleViewRepository
+          .findByArticleIdAndUserId(articleId, userId)
+          .orElseThrow(() -> ArticleNotFoundException.byId(articleId));
+
+      return articleViewMapper.toDto(existingView);
+    }
+
     ArticleView articleView = new ArticleView(article, user);
     ArticleView savedArticleView = articleViewRepository.save(articleView);
     // viewCount 증가

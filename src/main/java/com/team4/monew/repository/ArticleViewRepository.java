@@ -2,6 +2,7 @@ package com.team4.monew.repository;
 
 import com.team4.monew.entity.ArticleView;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,4 +20,6 @@ public interface ArticleViewRepository extends JpaRepository<ArticleView, UUID> 
       @Param("articleIds") List<UUID> articleIds);
 
   List<ArticleView> findTop10ByUserIdOrderByViewedAtDesc(UUID userId);
+
+  Optional<ArticleView> findByArticleIdAndUserId(UUID articleId, UUID userId);
 }
