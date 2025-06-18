@@ -2,6 +2,11 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.0'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
+}
+
+jacoco {
+    toolVersion = "0.8.8"
 }
 
 group = 'com.team4.monew'
@@ -98,4 +103,12 @@ sourceSets {
 // gradle clean 시 QClass 디렉토리 삭제
 clean {
     delete file(generated)
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = false
+    }
 }
