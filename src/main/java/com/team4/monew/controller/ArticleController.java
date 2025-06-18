@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -61,12 +61,14 @@ public class ArticleController {
       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant after,
       @RequestHeader(value = "Monew-Request-User-ID", required = false) UUID userId
   ) {
+    ZoneId kstZone = ZoneId.of("Asia/Seoul");
+
     Instant fromInstant = (publishDateFrom != null)
-        ? publishDateFrom.atZone(ZoneOffset.UTC).toInstant()
+        ? publishDateFrom.atZone(kstZone).toInstant()
         : null;
 
     Instant toInstant = (publishDateTo != null)
-        ? publishDateTo.atZone(ZoneOffset.UTC).toInstant()
+        ? publishDateTo.atZone(kstZone).toInstant()
         : null;
 
     CursorPageResponseArticleDto response = articleService.getAllArticles(
